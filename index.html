@@ -14,7 +14,7 @@
         }
 
         body {
-            font-family: 'Georgia', serif;
+            font-family: 'Monaco', monospace;
             background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%);
             color: #fff;
         }
@@ -197,6 +197,41 @@
             font-size: 0.9rem;
             color: #999;
         }
+        #region-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100vh;
+            background: rgba(0,0,0,0.85);
+            border-left: 3px solid #ff6b6b;
+            padding: 2rem;
+            color: white;
+            backdrop-filter: blur(10px);
+            transform: translateX(100%);   /* hidden off-screen */
+            transition: transform 0.4s ease-out;
+            z-index: 9999;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.4);
+        }
+        #region-panel.open {
+            transform: translateX(0);      /* slide in */
+        }
+
+        #region-panel h3 {
+            color: #ffa500;
+            margin-bottom: 1rem;
+        }
+
+        #region-panel button {
+            margin-top: 2rem;
+            padding: 0.5rem 1rem;
+            background: #ff6b6b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -276,6 +311,7 @@
             </p>
         </div>
     </div>
+    <div id="region-panel"></div>
 
     <script>
         // Fake data for coastal regions
@@ -355,13 +391,19 @@
                 .attr("opacity", 0.5);
 
             // Region label
-            regionsGroup.append("text")
+            const label = regionsGroup.append("text")
                 .attr("x", x)
                 .attr("y", y)
                 .attr("text-anchor", "middle")
                 .attr("fill", "#fff")
                 .attr("font-size", "14px")
-                .text(region.name);
+                .style("cursor", "pointer")
+                .text(region.name)
+                .on("click", () => {
+                    showRegionPanel(region);
+                });
+                
+                
         });
 
         // Temperature label
@@ -372,6 +414,8 @@
             .attr("fill", "#fff")
             .attr("font-size", "24px")
             .attr("font-weight", "bold");
+
+            let bubbleInterval = null;
 
         function updateVisualization(step) {
             const projection = projections[step];
@@ -387,29 +431,153 @@
             tempLabel.text(`+${temp.toFixed(1)}°C`);
 
             // Create bubbles based on temperature
-            const numBubbles = Math.floor(temp * 5);
+            // const numBubbles = Math.floor(temp * 5);
             
-            bubblesGroup.selectAll("circle").remove();
+            // bubblesGroup.selectAll("circle").remove();
             
-            for (let i = 0; i < numBubbles; i++) {
-                bubblesGroup.append("circle")
-                    .attr("cx", (Math.random() - 0.5) * 200)
-                    .attr("cy", 80)
-                    .attr("r", 3 + Math.random() * 5)
-                    .attr("fill", "white")
-                    .attr("opacity", 0.7)
-                    .transition()
-                    .duration(1000 + Math.random() * 1000)
-                    .attr("cy", -50)
-                    .attr("opacity", 0)
-                    .remove();
+            // for (let i = 0; i < numBubbles; i++) {
+            //     bubblesGroup.append("circle")
+            //         .attr("cx", (Math.random() - 0.5) * 200)
+            //         .attr("cy", 80)
+            //         .attr("r", 3 + Math.random() * 5)
+            //         .attr("fill", "white")
+            //         .attr("opacity", 0.7)
+            //         .transition()
+            //         .duration(1000 + Math.random() * 1000)
+            //         .attr("cy", -50)
+            //         .attr("opacity", 0)
+            //         .remove();
+            // }
+
+                            // Stop previous bubbling
+            if (bubbleInterval) {
+                clearInterval(bubbleInterval);
+                bubbleInterval = null;
             }
+
+
+            if (step === 1) {
+                bubbleInterval = setInterval(() => {
+                    for (let i = 0; i < 5; i++) { // increase this number for more
+                        createBubble();
+                    }
+                }, 700); // decrease this for faster bubbling
+            } else {
+                // Single bubbling for earlier steps
+                const numBubbles = Math.floor(temp * 5);
+                for (let i = 0; i < numBubbles; i++) {
+                    createBubble();
+                }
+            }
+
+            if (step === 2) {
+                bubbleInterval = setInterval(() => {
+                    for (let i = 0; i < 10; i++) { // increase this number for more
+                        createBubble();
+                    }
+                }, 300); // decrease this for faster bubbling
+            } else {
+                // Single bubbling for earlier steps
+                const numBubbles = Math.floor(temp * 5);
+                for (let i = 0; i < numBubbles; i++) {
+                    createBubble();
+                }
+            }
+
+            if (step === 3) {
+                bubbleInterval = setInterval(() => {
+                    for (let i = 0; i < 15; i++) { // increase this number for more
+                        createBubble();
+                    }
+                }, 100); // decrease this for faster bubbling
+            } else {
+                // Single bubbling for earlier steps
+                const numBubbles = Math.floor(temp * 5);
+                for (let i = 0; i < numBubbles; i++) {
+                    createBubble();
+                }
+            }
+
+            // Continuous bubbling for 2050
+            if (step === 4) {
+                bubbleInterval = setInterval(() => {
+                    for (let i = 0; i < 20; i++) { // increase this number for more
+                        createBubble();
+                    }
+                }, 25); // decrease this for faster bubbling
+            } else {
+                // Single bubbling for earlier steps
+                const numBubbles = Math.floor(temp * 5);
+                for (let i = 0; i < numBubbles; i++) {
+                    createBubble();
+                }
+            }
+
 
             // Update knob
             const knobRotation = (step / 4) * 180;
             d3.select(".knob-marker")
                 .style("transform", `translateX(-50%) rotate(${knobRotation}deg)`);
         }
+
+        function createBubble() {
+    bubblesGroup.append("circle")
+        .attr("cx", (Math.random() - 0.5) * 200)
+        .attr("cy", 80)
+        .attr("r", 3 + Math.random() * 5)
+        .attr("fill", "white")
+        .attr("opacity", 0.7)
+        .transition()
+        .duration(1000 + Math.random() * 1000)
+        .attr("cy", -50)
+        .attr("opacity", 0)
+        .remove();
+}
+
+//         function showRegionPanel(region) {
+//     const panel = document.getElementById("region-panel");
+
+//     panel.innerHTML = `
+//         <div class="panel-content">
+//             <h3>${region.name}</h3>
+//             <p><strong>Base Temp:</strong> ${region.baseTemp}°C</p>
+//             <p><strong>Projected Increase by 2050:</strong> +4.8°C</p>
+//             <button id="close-panel">Close</button>
+//         </div>
+//     `;
+
+//     panel.style.display = "block";
+
+//     document.getElementById("close-panel").onclick = () => {
+//         panel.style.display = "none";
+//     };
+// }
+
+function showRegionPanel(region) {
+    const panel = document.getElementById("region-panel");
+
+    panel.innerHTML = `
+        <div class="panel-content">
+            <h3>${region.name}</h3>
+            <p><strong>Base Temp:</strong> ${region.baseTemp}°C</p>
+            <p><strong>Projected Increase by 2050:</strong> +4.8°C</p>
+            <button id="close-panel">Close</button>
+        </div>
+    `;
+
+    panel.classList.add("open");
+
+    document.getElementById("close-panel").onclick = () => {
+        panel.classList.remove("open");
+    };
+}
+
+document.addEventListener("click", e => {
+    const panel = document.getElementById("region-panel");
+    if (!panel.contains(e.target) && !e.target.matches("text")) {
+        panel.classList.remove("open");
+    }
+});
 
         // Scrollama setup
         const scroller = scrollama();
