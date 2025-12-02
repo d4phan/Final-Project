@@ -6,6 +6,7 @@
     <title>Are Temperate Coastal Zones Entering a New Era of "Dry Heat"?</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/scrollama/3.2.0/scrollama.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,8 +15,8 @@
         }
 
         body {
-            font-family: 'Monaco', monospace;
-            background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Source Sans Pro', sans-serif;
+            background: #0a0a0f;
             color: #fff;
         }
 
@@ -27,21 +28,215 @@
             align-items: center;
             text-align: center;
             padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Coastal background image */
+        #header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(to bottom, 
+                    rgba(10, 10, 15, 0.3) 0%,
+                    rgba(10, 10, 15, 0.5) 40%,
+                    rgba(10, 10, 15, 0.85) 80%,
+                    rgba(22, 33, 62, 1) 100%
+                ),
+                url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+            animation: slowZoom 30s ease-in-out infinite alternate;
+        }
+
+        @keyframes slowZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* Heat haze overlay effect */
+        #header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 50% 100%, rgba(255, 100, 50, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 30% 80%, rgba(255, 150, 50, 0.1) 0%, transparent 40%),
+                radial-gradient(ellipse at 70% 90%, rgba(255, 80, 30, 0.12) 0%, transparent 50%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #header-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
 
         h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            max-width: 900px;
+            
+            /* Fiery animated gradient */
+            background: linear-gradient(
+                90deg,
+                #ff4500 0%,
+                #ff6b35 15%,
+                #ffa500 30%,
+                #ffcc00 45%,
+                #ff8c00 60%,
+                #ff4500 75%,
+                #ff6b35 90%,
+                #ff4500 100%
+            );
+            background-size: 200% 100%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            
+            animation: 
+                fireFlow 3s ease-in-out infinite,
+                titleFadeIn 1.5s ease-out forwards;
+            
+            opacity: 0;
+            transform: translateY(30px);
+            text-shadow: 0 0 80px rgba(255, 100, 0, 0.5);
+            filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.3));
+        }
+
+        @keyframes fireFlow {
+            0% { 
+                background-position: 0% 50%;
+                filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.3)) brightness(1);
+            }
+            25% { 
+                filter: drop-shadow(0 0 30px rgba(255, 150, 0, 0.5)) brightness(1.1);
+            }
+            50% { 
+                background-position: 100% 50%;
+                filter: drop-shadow(0 0 25px rgba(255, 200, 0, 0.4)) brightness(1.05);
+            }
+            75% { 
+                filter: drop-shadow(0 0 35px rgba(255, 120, 0, 0.5)) brightness(1.15);
+            }
+            100% { 
+                background-position: 0% 50%;
+                filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.3)) brightness(1);
+            }
+        }
+
+        @keyframes titleFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .subtitle {
-            font-size: 1.5rem;
-            color: #ccc;
-            max-width: 800px;
+            font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 700px;
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+            text-align: center;
+            margin: 0 auto;
+            
+            opacity: 0;
+            transform: translateY(20px);
+            animation: subtitleFadeIn 1.2s ease-out 0.8s forwards;
+        }
+
+        @keyframes subtitleFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Floating ember particles */
+        .ember {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #ff6b35 0%, #ff4500 50%, transparent 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3;
+            animation: emberFloat 8s ease-in-out infinite;
+        }
+
+        @keyframes emberFloat {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) scale(0);
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(80vh) scale(1);
+            }
+            90% {
+                opacity: 0.6;
+                transform: translateY(-10vh) scale(0.5);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20vh) scale(0);
+            }
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            opacity: 0;
+            animation: scrollIndicatorFade 1s ease-out 2s forwards;
+        }
+
+        @keyframes scrollIndicatorFade {
+            0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .scroll-indicator span {
+            display: block;
+            width: 24px;
+            height: 24px;
+            border-right: 2px solid rgba(255, 150, 100, 0.7);
+            border-bottom: 2px solid rgba(255, 150, 100, 0.7);
+            transform: rotate(45deg);
+            animation: scrollBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollBounce {
+            0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 1; }
+            50% { transform: rotate(45deg) translate(5px, 5px); opacity: 0.5; }
         }
 
         #scrolly-section {
@@ -73,16 +268,25 @@
         }
 
         .step-content {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             padding: 2rem;
-            border-radius: 10px;
+            border-radius: 12px;
             max-width: 400px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 150, 100, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .step-content h2 {
+            font-family: 'Playfair Display', serif;
             color: #ffa500;
             margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .step-content p {
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         #footer {
@@ -131,6 +335,7 @@
         }
 
         #footer h2 {
+            font-family: 'Playfair Display', serif;
             font-size: 2.5rem;
             margin-bottom: 2rem;
             color: #ff6b6b;
@@ -146,12 +351,14 @@
 
         .stat {
             background: rgba(255, 69, 0, 0.2);
-            padding: 1.5rem;
-            border-radius: 10px;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
             border: 2px solid #ff4500;
+            backdrop-filter: blur(8px);
         }
 
         .stat-value {
+            font-family: 'Playfair Display', serif;
             font-size: 3rem;
             font-weight: bold;
             color: #ff6347;
@@ -197,47 +404,41 @@
             font-size: 0.9rem;
             color: #999;
         }
-        #region-panel {
-            position: fixed;
-            top: 0;
+
+        /* Heat wave distortion effect for header */
+        .heat-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
             right: 0;
-            width: 300px;
-            height: 100vh;
-            background: rgba(0,0,0,0.85);
-            border-left: 3px solid #ff6b6b;
-            padding: 2rem;
-            color: white;
-            backdrop-filter: blur(10px);
-            transform: translateX(100%);   /* hidden off-screen */
-            transition: transform 0.4s ease-out;
-            z-index: 9999;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.4);
-        }
-        #region-panel.open {
-            transform: translateX(0);      /* slide in */
+            height: 200px;
+            background: linear-gradient(to top, rgba(255, 100, 50, 0.1), transparent);
+            z-index: 1;
+            animation: heatWave 4s ease-in-out infinite;
         }
 
-        #region-panel h3 {
-            color: #ffa500;
-            margin-bottom: 1rem;
-        }
-
-        #region-panel button {
-            margin-top: 2rem;
-            padding: 0.5rem 1rem;
-            background: #ff6b6b;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
+        @keyframes heatWave {
+            0%, 100% { 
+                transform: scaleY(1);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: scaleY(1.2);
+                opacity: 0.5;
+            }
         }
     </style>
 </head>
 <body>
     <div id="header">
-        <h1>Are Temperate Coastal Zones Entering a New Era of "Dry Heat"?</h1>
-        <p class="subtitle">An exploration of rising temperatures in coastal regions projected to 2050</p>
+        <div id="header-content">
+            <h1>Are Temperate Coastal Zones Entering a New Era of "Dry Heat"?</h1>
+            <p class="subtitle">An exploration of rising temperatures in coastal regions projected to 2050</p>
+        </div>
+        <div class="heat-wave"></div>
+        <div class="scroll-indicator">
+            <span></span>
+        </div>
     </div>
 
     <div id="scrolly-section">
@@ -306,14 +507,26 @@
                     <div class="stat-label">Days Over 35°C</div>
                 </div>
             </div>
-            <p style="margin-top: 2rem; font-size: 1.2rem; max-width: 800px; margin-left: auto; margin-right: auto;">
+            <p style="margin-top: 2rem; font-size: 1.2rem; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.7;">
                 The data is clear: temperate coastal zones are transitioning into a new climate regime characterized by prolonged dry heat. Immediate action is needed to mitigate these projected increases.
             </p>
         </div>
     </div>
-    <div id="region-panel"></div>
 
     <script>
+        // Create floating ember particles in header
+        const header = document.getElementById('header');
+        for (let i = 0; i < 15; i++) {
+            const ember = document.createElement('div');
+            ember.className = 'ember';
+            ember.style.left = `${Math.random() * 100}%`;
+            ember.style.animationDelay = `${Math.random() * 8}s`;
+            ember.style.animationDuration = `${6 + Math.random() * 4}s`;
+            ember.style.width = `${3 + Math.random() * 4}px`;
+            ember.style.height = ember.style.width;
+            header.appendChild(ember);
+        }
+
         // Fake data for coastal regions
         const coastalRegions = [
             { name: "Pacific Coast", x: 200, y: 300, baseTemp: 18 },
@@ -391,19 +604,13 @@
                 .attr("opacity", 0.5);
 
             // Region label
-            const label = regionsGroup.append("text")
+            regionsGroup.append("text")
                 .attr("x", x)
                 .attr("y", y)
                 .attr("text-anchor", "middle")
                 .attr("fill", "#fff")
                 .attr("font-size", "14px")
-                .style("cursor", "pointer")
-                .text(region.name)
-                .on("click", () => {
-                    showRegionPanel(region);
-                });
-                
-                
+                .text(region.name);
         });
 
         // Temperature label
@@ -414,8 +621,6 @@
             .attr("fill", "#fff")
             .attr("font-size", "24px")
             .attr("font-weight", "bold");
-
-            let bubbleInterval = null;
 
         function updateVisualization(step) {
             const projection = projections[step];
@@ -431,153 +636,29 @@
             tempLabel.text(`+${temp.toFixed(1)}°C`);
 
             // Create bubbles based on temperature
-            // const numBubbles = Math.floor(temp * 5);
+            const numBubbles = Math.floor(temp * 5);
             
-            // bubblesGroup.selectAll("circle").remove();
+            bubblesGroup.selectAll("circle").remove();
             
-            // for (let i = 0; i < numBubbles; i++) {
-            //     bubblesGroup.append("circle")
-            //         .attr("cx", (Math.random() - 0.5) * 200)
-            //         .attr("cy", 80)
-            //         .attr("r", 3 + Math.random() * 5)
-            //         .attr("fill", "white")
-            //         .attr("opacity", 0.7)
-            //         .transition()
-            //         .duration(1000 + Math.random() * 1000)
-            //         .attr("cy", -50)
-            //         .attr("opacity", 0)
-            //         .remove();
-            // }
-
-                            // Stop previous bubbling
-            if (bubbleInterval) {
-                clearInterval(bubbleInterval);
-                bubbleInterval = null;
+            for (let i = 0; i < numBubbles; i++) {
+                bubblesGroup.append("circle")
+                    .attr("cx", (Math.random() - 0.5) * 200)
+                    .attr("cy", 80)
+                    .attr("r", 3 + Math.random() * 5)
+                    .attr("fill", "white")
+                    .attr("opacity", 0.7)
+                    .transition()
+                    .duration(1000 + Math.random() * 1000)
+                    .attr("cy", -50)
+                    .attr("opacity", 0)
+                    .remove();
             }
-
-
-            if (step === 1) {
-                bubbleInterval = setInterval(() => {
-                    for (let i = 0; i < 5; i++) { // increase this number for more
-                        createBubble();
-                    }
-                }, 700); // decrease this for faster bubbling
-            } else {
-                // Single bubbling for earlier steps
-                const numBubbles = Math.floor(temp * 5);
-                for (let i = 0; i < numBubbles; i++) {
-                    createBubble();
-                }
-            }
-
-            if (step === 2) {
-                bubbleInterval = setInterval(() => {
-                    for (let i = 0; i < 10; i++) { // increase this number for more
-                        createBubble();
-                    }
-                }, 300); // decrease this for faster bubbling
-            } else {
-                // Single bubbling for earlier steps
-                const numBubbles = Math.floor(temp * 5);
-                for (let i = 0; i < numBubbles; i++) {
-                    createBubble();
-                }
-            }
-
-            if (step === 3) {
-                bubbleInterval = setInterval(() => {
-                    for (let i = 0; i < 15; i++) { // increase this number for more
-                        createBubble();
-                    }
-                }, 100); // decrease this for faster bubbling
-            } else {
-                // Single bubbling for earlier steps
-                const numBubbles = Math.floor(temp * 5);
-                for (let i = 0; i < numBubbles; i++) {
-                    createBubble();
-                }
-            }
-
-            // Continuous bubbling for 2050
-            if (step === 4) {
-                bubbleInterval = setInterval(() => {
-                    for (let i = 0; i < 20; i++) { // increase this number for more
-                        createBubble();
-                    }
-                }, 25); // decrease this for faster bubbling
-            } else {
-                // Single bubbling for earlier steps
-                const numBubbles = Math.floor(temp * 5);
-                for (let i = 0; i < numBubbles; i++) {
-                    createBubble();
-                }
-            }
-
 
             // Update knob
             const knobRotation = (step / 4) * 180;
             d3.select(".knob-marker")
                 .style("transform", `translateX(-50%) rotate(${knobRotation}deg)`);
         }
-
-        function createBubble() {
-    bubblesGroup.append("circle")
-        .attr("cx", (Math.random() - 0.5) * 200)
-        .attr("cy", 80)
-        .attr("r", 3 + Math.random() * 5)
-        .attr("fill", "white")
-        .attr("opacity", 0.7)
-        .transition()
-        .duration(1000 + Math.random() * 1000)
-        .attr("cy", -50)
-        .attr("opacity", 0)
-        .remove();
-}
-
-//         function showRegionPanel(region) {
-//     const panel = document.getElementById("region-panel");
-
-//     panel.innerHTML = `
-//         <div class="panel-content">
-//             <h3>${region.name}</h3>
-//             <p><strong>Base Temp:</strong> ${region.baseTemp}°C</p>
-//             <p><strong>Projected Increase by 2050:</strong> +4.8°C</p>
-//             <button id="close-panel">Close</button>
-//         </div>
-//     `;
-
-//     panel.style.display = "block";
-
-//     document.getElementById("close-panel").onclick = () => {
-//         panel.style.display = "none";
-//     };
-// }
-
-function showRegionPanel(region) {
-    const panel = document.getElementById("region-panel");
-
-    panel.innerHTML = `
-        <div class="panel-content">
-            <h3>${region.name}</h3>
-            <p><strong>Base Temp:</strong> ${region.baseTemp}°C</p>
-            <p><strong>Projected Increase by 2050:</strong> +4.8°C</p>
-            <button id="close-panel">Close</button>
-        </div>
-    `;
-
-    panel.classList.add("open");
-
-    document.getElementById("close-panel").onclick = () => {
-        panel.classList.remove("open");
-    };
-}
-
-document.addEventListener("click", e => {
-    const panel = document.getElementById("region-panel");
-    if (!panel.contains(e.target) && !e.target.matches("text")) {
-        panel.classList.remove("open");
-    }
-});
 
         // Scrollama setup
         const scroller = scrollama();
