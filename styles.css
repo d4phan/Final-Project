@@ -559,3 +559,27 @@ h1 {
 .hidden {
     display: none;
 }
+
+.slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.8rem;
+    position: relative;
+    width: 100%;
+}
+
+.tick {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.tick:first-child {
+    text-align: left;
+}
+
+.tick:last-child {
+    text-align: right;
+}
