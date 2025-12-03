@@ -18,28 +18,28 @@ const coastalRegions = [
         baseTemp: 18,
         info: "The Pacific Coast stretches from Alaska to California, experiencing significant warming trends. Rising ocean temperatures are affecting marine ecosystems and coastal communities.",
         states: ["California", "Oregon", "Washington"],
-        markerPos: { x: -320, y: -20 }
+        markerPos: { x: -280, y: -20 }
     },
     { 
         name: "Atlantic Coast", 
         baseTemp: 16,
         info: "The Atlantic Coast from Maine to Florida faces increasing hurricane intensity and sea level rise. Coastal erosion threatens infrastructure and habitats.",
         states: ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"],
-        markerPos: { x: 310, y: -60 }
+        markerPos: { x: 270, y: -60 }
     },
     { 
         name: "Gulf Coast", 
         baseTemp: 22,
         info: "The Gulf Coast experiences some of the fastest warming rates. Wetland loss, intensified storms, and heat waves pose major challenges to this region.",
         states: ["Texas", "Louisiana", "Mississippi", "Alabama", "Florida"],
-        markerPos: { x: 120, y: 90 }
+        markerPos: { x: 100, y: 90 }
     },
     { 
         name: "Mediterranean Climate", 
         baseTemp: 19,
         info: "Mediterranean climate zones in California are shifting toward more extreme dry heat conditions, increasing wildfire risk and water scarcity.",
         states: ["California"],
-        markerPos: { x: -310, y: 40 }
+        markerPos: { x: -270, y: 40 }
     }
 ];
 
@@ -105,14 +105,23 @@ const expandedMapGroup = svg.append("g")
     .style("opacity", 0)
     .style("pointer-events", "none");
 
-// Map box dimensions - BIGGER to fit everything
-const mapBoxWidth = 860;
-const mapBoxHeight = 580;
+// Layout dimensions
+const mapBoxWidth = 750;
+const mapBoxHeight = 450;
+const legendBoxWidth = 180;
+const legendBoxHeight = mapBoxHeight;
+const infoBoxWidth = mapBoxWidth + legendBoxWidth + 15;
+const infoBoxHeight = 80;
+const gap = 15;
 
-// Expanded map background box
+// Total container offset to center everything
+const totalWidth = mapBoxWidth + gap + legendBoxWidth;
+const offsetX = -totalWidth / 2;
+
+// Map box background
 expandedMapGroup.append("rect")
-    .attr("x", -mapBoxWidth/2)
-    .attr("y", -mapBoxHeight/2)
+    .attr("x", offsetX)
+    .attr("y", -mapBoxHeight/2 - 40)
     .attr("width", mapBoxWidth)
     .attr("height", mapBoxHeight)
     .attr("rx", 15)
@@ -120,24 +129,24 @@ expandedMapGroup.append("rect")
     .attr("stroke", "rgba(255, 150, 100, 0.6)")
     .attr("stroke-width", 3);
 
-// Expanded map title
+// Map title
 expandedMapGroup.append("text")
-    .attr("x", 0)
-    .attr("y", -mapBoxHeight/2 + 35)
+    .attr("x", offsetX + mapBoxWidth/2)
+    .attr("y", -mapBoxHeight/2 - 10)
     .attr("text-anchor", "middle")
     .attr("fill", "#ffa500")
-    .attr("font-size", "28px")
+    .attr("font-size", "26px")
     .attr("font-family", "'Playfair Display', serif")
     .text("Coastal Regions at Risk");
 
-// Close button for expanded map
+// Close button
 const closeButton = expandedMapGroup.append("g")
     .attr("class", "close-button")
-    .attr("transform", `translate(${mapBoxWidth/2 - 35}, ${-mapBoxHeight/2 + 35})`)
+    .attr("transform", `translate(${offsetX + mapBoxWidth - 30}, ${-mapBoxHeight/2 - 10})`)
     .style("cursor", "pointer");
 
 closeButton.append("circle")
-    .attr("r", 18)
+    .attr("r", 16)
     .attr("fill", "rgba(255, 100, 100, 0.3)")
     .attr("stroke", "#ff6b6b")
     .attr("stroke-width", 2);
@@ -146,111 +155,126 @@ closeButton.append("text")
     .attr("text-anchor", "middle")
     .attr("dy", "0.35em")
     .attr("fill", "#ff6b6b")
-    .attr("font-size", "22px")
+    .attr("font-size", "20px")
     .attr("font-weight", "bold")
     .text("×");
 
-// Group for the actual map - positioned higher to make room for info panel below
-const expandedMapContent = expandedMapGroup.append("g")
-    .attr("class", "expanded-map-content")
-    .attr("transform", "translate(0, -50)");
+// Legend box - TO THE RIGHT of the map
+const legendBox = expandedMapGroup.append("g")
+    .attr("class", "legend-box")
+    .attr("transform", `translate(${offsetX + mapBoxWidth + gap}, ${-mapBoxHeight/2 - 40})`);
 
-// Group for region markers
-const regionMarkers = expandedMapGroup.append("g")
-    .attr("class", "region-markers")
-    .attr("transform", "translate(0, -50)");
+legendBox.append("rect")
+    .attr("width", legendBoxWidth)
+    .attr("height", legendBoxHeight)
+    .attr("rx", 15)
+    .attr("fill", "rgba(10, 20, 40, 0.95)")
+    .attr("stroke", "rgba(255, 150, 100, 0.6)")
+    .attr("stroke-width", 3);
 
-// Info panel for region details - BELOW the map
-const infoPanelY = mapBoxHeight/2 - 140;
-const infoPanel = expandedMapGroup.append("g")
-    .attr("class", "info-panel")
-    .attr("transform", `translate(0, ${infoPanelY})`)
-    .style("opacity", 0);
-
-infoPanel.append("rect")
-    .attr("x", -mapBoxWidth/2 + 20)
-    .attr("y", -25)
-    .attr("width", mapBoxWidth - 40)
-    .attr("height", 60)
-    .attr("rx", 8)
-    .attr("fill", "rgba(255, 100, 50, 0.2)")
-    .attr("stroke", "rgba(255, 150, 100, 0.5)")
-    .attr("stroke-width", 1);
-
-const infoTitle = infoPanel.append("text")
-    .attr("class", "info-title")
-    .attr("x", 0)
-    .attr("y", -5)
+// Legend title
+legendBox.append("text")
+    .attr("x", legendBoxWidth/2)
+    .attr("y", 35)
     .attr("text-anchor", "middle")
     .attr("fill", "#ffa500")
     .attr("font-size", "16px")
-    .attr("font-weight", "bold");
+    .attr("font-weight", "bold")
+    .text("Legend");
 
-const infoText = infoPanel.append("text")
-    .attr("class", "info-text")
-    .attr("x", 0)
-    .attr("y", 18)
-    .attr("text-anchor", "middle")
-    .attr("fill", "rgba(255, 255, 255, 0.9)")
-    .attr("font-size", "13px");
-
-// Legend box dimensions - BELOW info panel
-const legendBoxWidth = mapBoxWidth;
-const legendBoxHeight = 50;
-const legendBoxY = mapBoxHeight/2 - 60;
-
-// Legend box background - SEPARATE BOX BELOW MAP
-const legendBox = expandedMapGroup.append("g")
-    .attr("class", "legend-box")
-    .attr("transform", `translate(0, ${legendBoxY})`);
-
-legendBox.append("rect")
-    .attr("x", -legendBoxWidth/2)
-    .attr("y", 0)
-    .attr("width", legendBoxWidth)
-    .attr("height", legendBoxHeight)
-    .attr("rx", 10)
-    .attr("fill", "rgba(10, 20, 40, 0.95)")
-    .attr("stroke", "rgba(255, 150, 100, 0.6)")
-    .attr("stroke-width", 2);
-
-// Legend content - CENTERED
-const legendContent = legendBox.append("g")
-    .attr("transform", `translate(0, ${legendBoxHeight/2})`);
-
+// Legend items - VERTICAL layout
 const legendItems = [
     { color: "rgba(255, 107, 53, 0.7)", label: "Pacific Coast" },
     { color: "rgba(100, 200, 255, 0.7)", label: "Atlantic Coast" },
-    { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" }
+    { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" },
+    { color: "rgba(100, 150, 200, 0.4)", label: "Other States" }
 ];
 
-// Calculate total legend width for centering
-const itemWidth = 160;
-const totalLegendWidth = legendItems.length * itemWidth;
-const legendStartX = -totalLegendWidth/2 + itemWidth/2;
+const legendStartY = 70;
+const legendItemSpacing = 50;
 
 legendItems.forEach((item, i) => {
-    const g = legendContent.append("g")
-        .attr("transform", `translate(${legendStartX + i * itemWidth}, 0)`);
+    const g = legendBox.append("g")
+        .attr("transform", `translate(${legendBoxWidth/2}, ${legendStartY + i * legendItemSpacing})`);
     
     g.append("rect")
-        .attr("x", -60)
-        .attr("y", -10)
-        .attr("width", 20)
-        .attr("height", 20)
+        .attr("x", -70)
+        .attr("y", -12)
+        .attr("width", 24)
+        .attr("height", 24)
         .attr("rx", 4)
         .attr("fill", item.color)
         .attr("stroke", "rgba(255, 255, 255, 0.6)")
         .attr("stroke-width", 1);
     
     g.append("text")
-        .attr("x", -32)
+        .attr("x", -38)
         .attr("y", 5)
         .attr("fill", "rgba(255, 255, 255, 0.9)")
-        .attr("font-size", "14px")
-        .attr("font-weight", "500")
+        .attr("font-size", "13px")
         .text(item.label);
 });
+
+// Instructions text in legend
+legendBox.append("text")
+    .attr("x", legendBoxWidth/2)
+    .attr("y", legendBoxHeight - 60)
+    .attr("text-anchor", "middle")
+    .attr("fill", "rgba(255, 150, 100, 0.7)")
+    .attr("font-size", "11px")
+    .text("Click on a marker");
+
+legendBox.append("text")
+    .attr("x", legendBoxWidth/2)
+    .attr("y", legendBoxHeight - 45)
+    .attr("text-anchor", "middle")
+    .attr("fill", "rgba(255, 150, 100, 0.7)")
+    .attr("font-size", "11px")
+    .text("to learn more");
+
+// Group for the actual map content
+const expandedMapContent = expandedMapGroup.append("g")
+    .attr("class", "expanded-map-content")
+    .attr("transform", `translate(${offsetX + mapBoxWidth/2}, 0)`);
+
+// Group for region markers
+const regionMarkers = expandedMapGroup.append("g")
+    .attr("class", "region-markers")
+    .attr("transform", `translate(${offsetX + mapBoxWidth/2}, 0)`);
+
+// Info panel - BELOW the map (hidden initially)
+const infoPanelY = mapBoxHeight/2 - 40 + gap;
+const infoPanel = expandedMapGroup.append("g")
+    .attr("class", "info-panel")
+    .attr("transform", `translate(${offsetX + infoBoxWidth/2}, ${infoPanelY})`)
+    .style("opacity", 0);
+
+infoPanel.append("rect")
+    .attr("x", -infoBoxWidth/2)
+    .attr("y", 0)
+    .attr("width", infoBoxWidth)
+    .attr("height", infoBoxHeight)
+    .attr("rx", 12)
+    .attr("fill", "rgba(10, 20, 40, 0.95)")
+    .attr("stroke", "rgba(255, 150, 100, 0.6)")
+    .attr("stroke-width", 2);
+
+const infoTitle = infoPanel.append("text")
+    .attr("class", "info-title")
+    .attr("x", 0)
+    .attr("y", 28)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#ffa500")
+    .attr("font-size", "18px")
+    .attr("font-weight", "bold");
+
+const infoText = infoPanel.append("text")
+    .attr("class", "info-text")
+    .attr("x", 0)
+    .attr("y", 52)
+    .attr("text-anchor", "middle")
+    .attr("fill", "rgba(255, 255, 255, 0.9)")
+    .attr("font-size", "14px");
 
 function showRegionInfo(region) {
     infoTitle.text(region.name + " — Base Temp: " + region.baseTemp + "°C");
@@ -262,7 +286,7 @@ function showRegionInfo(region) {
     let currentLine = 1;
     
     words.forEach(word => {
-        if (currentLine === 1 && line1.length + word.length < 100) {
+        if (currentLine === 1 && line1.length + word.length < 110) {
             line1 += (line1 ? ' ' : '') + word;
         } else {
             currentLine = 2;
@@ -273,11 +297,11 @@ function showRegionInfo(region) {
     infoText.selectAll("tspan").remove();
     infoText.append("tspan").attr("x", 0).attr("dy", 0).text(line1);
     if (line2) {
-        infoText.append("tspan").attr("x", 0).attr("dy", "1.2em").text(line2);
+        infoText.append("tspan").attr("x", 0).attr("dy", "1.3em").text(line2);
     }
     
     infoPanel.transition()
-        .duration(300)
+        .duration(400)
         .style("opacity", 1);
 }
 
@@ -295,9 +319,9 @@ async function loadUSMap() {
         const statesOutline = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
         const nationOutline = topojson.mesh(us, us.objects.states, (a, b) => a === b);
         
-        // Create projection for expanded map - BIGGER SCALE
+        // Create projection for expanded map
         const projection = d3.geoAlbersUsa()
-            .scale(1000)
+            .scale(900)
             .translate([0, 0]);
         
         const path = d3.geoPath().projection(projection);
@@ -397,7 +421,6 @@ async function loadUSMap() {
         
     } catch (error) {
         console.error("Error loading map:", error);
-        // Fallback to simple representation if map fails to load
         drawFallbackMap();
     }
 }
@@ -435,7 +458,7 @@ function addRegionMarkers() {
             .attr("width", labelWidth)
             .attr("height", 22)
             .attr("rx", 5)
-            .attr("fill", "rgba(0, 0, 0, 0.8)");
+            .attr("fill", "rgba(0, 0, 0, 0.85)");
         
         // Label
         markerGroup.append("text")
@@ -482,7 +505,6 @@ function addRegionMarkers() {
 }
 
 function drawFallbackMap() {
-    // Simple fallback if TopoJSON fails to load
     const usOutlinePath = "M -300,-120 Q -270,-150 -230,-140 L -150,-110 Q -80,-130 0,-100 L 80,-90 Q 150,-110 220,-90 L 300,-70 Q 320,-20 310,40 L 300,100 Q 240,140 160,130 L 80,110 Q 20,130 -40,120 L -120,100 Q -200,130 -260,100 L -300,50 Q -320,0 -300,-60 Z";
     
     expandedMapContent.append("path")
