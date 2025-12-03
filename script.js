@@ -670,6 +670,7 @@ function pulseMarkers() {
 
 // Start pulsing after a delay to let markers load
 setTimeout(pulseMarkers, 1000);
+let bubbleInterval = null;
 
 function updateVisualization(step) {
     currentStep = step;
@@ -708,6 +709,42 @@ function updateVisualization(step) {
     const knobRotation = (step / 4) * 180;
     d3.select(".knob-marker")
         .style("transform", `translateX(-50%) rotate(${knobRotation}deg)`);
+    // Stop previous bubbling
+    if (bubbleInterval) {
+        clearInterval(bubbleInterval);
+        bubbleInterval = null;
+    }
+    if (step === 1) {
+        bubbleInterval = setInterval(() => {
+        for (let i = 0; i < 10; i++) {
+            createBubble();
+        }
+    }, 1000); // ✅ faster interval
+    }
+    if (step === 2) {
+        bubbleInterval = setInterval(() => {
+        for (let i = 0; i < 10; i++) {
+            createBubble();
+        }
+    }, 500); // ✅ faster interval
+    }
+    // Continuous bubbling for 2050
+    if (step === 3) {
+        bubbleInterval = setInterval(() => {
+        for (let i = 0; i < 15; i++) {
+            createBubble();
+        }
+    }, 200); // ✅ faster interval
+    }
+
+    // Continuous bubbling for 2050
+    if (step === 4) {
+        bubbleInterval = setInterval(() => {
+        for (let i = 0; i < 20; i++) {
+            createBubble();
+        }
+    }, 50); // ✅ faster interval
+    }
 }
 
 // Scrollama setup
@@ -742,3 +779,17 @@ for (let i = 0; i < 20; i++) {
 window.addEventListener('resize', () => {
     scroller.resize();
 });
+
+function createBubble() {
+    bubblesGroup.append("circle")
+        .attr("cx", (Math.random() - 0.5) * 200)
+        .attr("cy", 80)
+        .attr("r", 3 + Math.random() * 5)
+        .attr("fill", "white")
+        .attr("opacity", 0.7)
+        .transition()
+        .duration(1000 + Math.random() * 1000)
+        .attr("cy", -50)
+        .attr("opacity", 0)
+        .remove();
+}
