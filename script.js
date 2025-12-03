@@ -794,117 +794,20 @@ function createBubble() {
         .remove();
 }
 
-// Temperature Prediction Feature - Accuracy Feedback Only
-const ACTUAL_PROJECTION = 4.8; // Actual projected increase by 2050
-
-// Get DOM elements
-const slider = document.getElementById('temperature-slider');
-const predictionDisplay = document.getElementById('prediction-display');
-const submitBtn = document.getElementById('submit-prediction');
-const accuracyFeedback = document.getElementById('accuracy-feedback');
-const feedbackMessage = document.getElementById('feedback-message');
-const detailedFeedback = document.getElementById('detailed-feedback');
-const tryAgainBtn = document.getElementById('try-again');
-
-// Update slider display
-slider.addEventListener('input', function() {
-    const value = parseFloat(this.value);
-    predictionDisplay.textContent = `+${value.toFixed(1)}°C`;
-});
-
-// Calculate accuracy and show feedback
-function showAccuracyFeedback(userPrediction) {
-    const actual = ACTUAL_PROJECTION;
-    const difference = Math.abs(actual - userPrediction);
-    
-    // Determine accuracy level
-    let message, details;
-    
-    if (difference <= 0.3) {
-        message = "🎯 Excellent! Very accurate prediction!";
-        details = "Your estimate is remarkably close to scientific projections.";
-    } 
-    else if (difference <= 0.8) {
-        message = "📊 Good estimate!";
-        details = `Your prediction was off by ${difference.toFixed(1)}°C. That's a solid understanding of climate trends.`;
-    }
-    else if (difference <= 1.5) {
-        message = "📈 In the right range";
-        details = `Your estimate is ${difference.toFixed(1)}°C from the projection. The reality is more severe than many expect.`;
-    }
-    else if (difference <= 2.5) {
-        message = "🔽 Significant difference";
-        details = `Projections show ${actual - userPrediction > 0 ? "higher" : "lower"} warming than you predicted. Climate models indicate ${actual.toFixed(1)}°C increase.`;
-    }
-    else {
-        message = "⚠️ Large discrepancy";
-        details = `There's a ${difference.toFixed(1)}°C difference. Coastal zones are projected to warm more dramatically.`;
-    }
-    
-    // Additional context based on over/underestimation
-    if (userPrediction < actual - 0.5) {
-        details += " Many people underestimate how much coastal areas are warming.";
-    } else if (userPrediction > actual + 0.5) {
-        details += " While your estimate is high, some worst-case scenarios do reach these levels.";
-    }
-    
-    // Set feedback content
-    feedbackMessage.textContent = message;
-    detailedFeedback.textContent = details;
-    
-    // Show feedback section
-    accuracyFeedback.classList.remove('hidden');
-    accuracyFeedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-// Submit prediction
-submitBtn.addEventListener('click', function() {
-    const userPrediction = parseFloat(slider.value);
-    showAccuracyFeedback(userPrediction);
-});
-
-// Try again
-tryAgainBtn.addEventListener('click', function() {
-    // Reset slider
-    slider.value = 2.5;
-    predictionDisplay.textContent = '+2.5°C';
-    
-    // Hide feedback
-    accuracyFeedback.classList.add('hidden');
-    
-    // Focus back on slider
-    slider.focus();
-});
-
-// Keyboard support for slider
-slider.addEventListener('keydown', function(e) {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        e.preventDefault();
-        const step = parseFloat(slider.step);
-        const currentValue = parseFloat(slider.value);
-        const newValue = e.key === 'ArrowLeft' 
-            ? Math.max(0, currentValue - step)
-            : Math.min(7, currentValue + step);
-        
-        slider.value = newValue;
-        predictionDisplay.textContent = `+${newValue.toFixed(1)}°C`;
-    }
-});
-
-// Initialize
-predictionDisplay.textContent = `+${slider.value}°C`;
-
 // ==============================================
 // TEMPERATURE PREDICTION FEATURE
 // ==============================================
 
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', function() {
-    // Get elements
+    console.log('DOM loaded - setting up prediction feature');
+    
+    // Get all elements
     const slider = document.getElementById('temperature-slider');
     const predictionValue = document.getElementById('prediction-value');
     const submitBtn = document.getElementById('submit-prediction');
     const tryAgainBtn = document.getElementById('try-again');
+    const scrollToVizBtn = document.getElementById('scroll-to-visualization');
     const resultsSection = document.getElementById('prediction-results');
     const userPredictionDisplay = document.getElementById('user-prediction');
     const actualProjectionDisplay = document.getElementById('actual-projection');
@@ -912,6 +815,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultMessage = document.getElementById('result-message');
     const accuracyFeedback = document.getElementById('accuracy-feedback');
     const feedbackText = document.getElementById('slider-feedback-text');
+    
+    console.log('Elements found:', {
+        slider: !!slider,
+        predictionValue: !!predictionValue,
+        submitBtn: !!submitBtn,
+        resultsSection: !!resultsSection
+    });
     
     const ACTUAL_PROJECTION = 4.8; // Actual projected increase by 2050
     
@@ -936,17 +846,36 @@ document.addEventListener('DOMContentLoaded', function() {
     if (slider && predictionValue) {
         slider.addEventListener('input', function() {
             const value = parseFloat(this.value);
+            console.log('Slider moved:', value);
             predictionValue.textContent = `+${value.toFixed(1)}°C`;
             updateSliderFeedback(value);
         });
         
         // Initialize display
-        predictionValue.textContent = `+${parseFloat(slider.value).toFixed(1)}°C`;
-        updateSliderFeedback(parseFloat(slider.value));
+        const initialValue = parseFloat(slider.value);
+        predictionValue.textContent = `+${initialValue.toFixed(1)}°C`;
+        updateSliderFeedback(initialValue);
+    }
+    
+    // Function to update impact bars
+    function updateImpactBars(userTemp, actualTemp) {
+        const userBar = document.querySelector('.user-prediction .impact-bar');
+        const actualBar = document.querySelector('.actual-projection .impact-bar');
+        
+        if (userBar) {
+            const userPercent = Math.min(100, (userTemp / 7) * 100);
+            userBar.style.width = `${userPercent}%`;
+        }
+        
+        if (actualBar) {
+            const actualPercent = Math.min(100, (actualTemp / 7) * 100);
+            actualBar.style.width = `${actualPercent}%`;
+        }
     }
     
     // Function to show accuracy feedback
     function showAccuracyFeedback(userPrediction) {
+        console.log('Showing accuracy feedback for:', userPrediction);
         const actual = ACTUAL_PROJECTION;
         const difference = actual - userPrediction;
         const absDifference = Math.abs(difference);
@@ -963,6 +892,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (temperatureDifference) {
             temperatureDifference.textContent = `${difference >= 0 ? '+' : ''}${difference.toFixed(1)}°C`;
         }
+        
+        // Update impact bars
+        updateImpactBars(userPrediction, actual);
         
         // Determine accuracy level and set messages
         let message, details;
@@ -1006,22 +938,33 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show results section
         if (resultsSection) {
+            console.log('Showing results section');
             resultsSection.style.display = 'block';
-            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
     }
     
     // Handle submit button
     if (submitBtn) {
+        console.log('Submit button found, adding event listener');
         submitBtn.addEventListener('click', function() {
-            const userPrediction = parseFloat(slider.value);
-            showAccuracyFeedback(userPrediction);
+            console.log('Submit button clicked');
+            if (slider) {
+                const userPrediction = parseFloat(slider.value);
+                console.log('User prediction value:', userPrediction);
+                showAccuracyFeedback(userPrediction);
+            }
         });
+    } else {
+        console.error('Submit button NOT FOUND! Check your HTML for id="submit-prediction"');
     }
     
     // Handle try again button
     if (tryAgainBtn) {
         tryAgainBtn.addEventListener('click', function() {
+            console.log('Try again clicked');
             // Reset slider
             if (slider) {
                 slider.value = 2.5;
@@ -1049,25 +992,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Handle "Continue to Visualization" button
+    if (scrollToVizBtn) {
+        scrollToVizBtn.addEventListener('click', function() {
+            console.log('Continue to visualization clicked');
+            const scrollySection = document.getElementById('scrolly-section');
+            if (scrollySection) {
+                scrollySection.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    }
+    
     // Handle share button (optional basic functionality)
     const shareBtn = document.getElementById('share-results');
     if (shareBtn) {
         shareBtn.addEventListener('click', function() {
-            const userTemp = parseFloat(slider.value).toFixed(1);
-            const shareText = `I predicted a ${userTemp}°C temperature rise in coastal zones by 2050. The actual projection is 4.8°C. Test your climate intuition!`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'My Climate Prediction',
-                    text: shareText,
-                    url: window.location.href
-                });
-            } else {
-                // Fallback: Copy to clipboard
-                navigator.clipboard.writeText(shareText)
-                    .then(() => alert('Results copied to clipboard!'))
-                    .catch(() => alert('Could not share results.'));
+            if (slider) {
+                const userTemp = parseFloat(slider.value).toFixed(1);
+                const shareText = `I predicted a ${userTemp}°C temperature rise in coastal zones by 2050. The actual projection is 4.8°C. Test your climate intuition!`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'My Climate Prediction',
+                        text: shareText,
+                        url: window.location.href
+                    });
+                } else {
+                    // Fallback: Copy to clipboard
+                    navigator.clipboard.writeText(shareText)
+                        .then(() => alert('Results copied to clipboard!'))
+                        .catch(() => alert('Could not share results.'));
+                }
             }
         });
     }
+    
+    // Initialize impact bars
+    setTimeout(() => {
+        if (slider) {
+            const initialValue = parseFloat(slider.value);
+            updateImpactBars(initialValue, ACTUAL_PROJECTION);
+        }
+    }, 500);
 });
