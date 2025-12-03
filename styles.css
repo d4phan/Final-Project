@@ -238,7 +238,8 @@ h1 {
 
 #scrolly-section {
     position: relative;
-    padding: 0;
+    min-height: 500vh;
+    background: linear-gradient(to bottom, #16213e 0%, #0f3460 100%)
 }
 
 #vis-container {
@@ -257,7 +258,7 @@ h1 {
 }
 
 .step {
-    height: 80vh;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: flex-start;
