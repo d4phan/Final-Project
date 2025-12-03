@@ -11,35 +11,35 @@ for (let i = 0; i < 15; i++) {
     header.appendChild(ember);
 }
 
-// Fake data for coastal regions
+// Coastal regions data
 const coastalRegions = [
     { 
         name: "Pacific Coast", 
         baseTemp: 18,
         info: "The Pacific Coast stretches from Alaska to California, experiencing significant warming trends. Rising ocean temperatures are affecting marine ecosystems and coastal communities.",
-        coordinates: { x: 80, y: 180 },
-        mapCoords: { x: 0.12, y: 0.35 }
+        states: ["California", "Oregon", "Washington"],
+        markerPos: { x: -230, y: 20 }
     },
     { 
         name: "Atlantic Coast", 
         baseTemp: 16,
         info: "The Atlantic Coast from Maine to Florida faces increasing hurricane intensity and sea level rise. Coastal erosion threatens infrastructure and habitats.",
-        coordinates: { x: 420, y: 200 },
-        mapCoords: { x: 0.85, y: 0.4 }
+        states: ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"],
+        markerPos: { x: 220, y: -20 }
     },
     { 
         name: "Gulf Coast", 
         baseTemp: 22,
         info: "The Gulf Coast experiences some of the fastest warming rates. Wetland loss, intensified storms, and heat waves pose major challenges to this region.",
-        coordinates: { x: 300, y: 320 },
-        mapCoords: { x: 0.55, y: 0.65 }
+        states: ["Texas", "Louisiana", "Mississippi", "Alabama", "Florida"],
+        markerPos: { x: 80, y: 100 }
     },
     { 
-        name: "Mediterranean", 
+        name: "Mediterranean Climate", 
         baseTemp: 19,
         info: "Mediterranean climate zones in California are shifting toward more extreme dry heat conditions, increasing wildfire risk and water scarcity.",
-        coordinates: { x: 100, y: 220 },
-        mapCoords: { x: 0.15, y: 0.45 }
+        states: ["California"],
+        markerPos: { x: -220, y: 60 }
     }
 ];
 
@@ -59,6 +59,7 @@ svg.attr("width", width).attr("height", height);
 // State management
 let isMapExpanded = false;
 let currentStep = 0;
+let usMapData = null;
 
 // Create main groups
 const mainGroup = svg.append("g").attr("class", "main-group");
@@ -92,28 +93,10 @@ minimapGroup.append("text")
     .attr("font-size", "12px")
     .text("Click to view map");
 
-// Draw simplified US map outline in minimap
-const minimapContent = minimapGroup.append("g").attr("class", "minimap-content");
-
-// Simplified US coastline path
-const usOutlinePath = "M 20,40 Q 25,35 30,38 L 35,42 Q 40,40 45,45 L 50,50 Q 55,48 60,52 L 70,55 Q 80,50 90,55 L 100,58 Q 110,55 120,60 L 130,65 Q 125,75 120,85 L 115,95 Q 105,100 95,95 L 85,90 Q 75,95 65,90 L 55,85 Q 45,90 35,85 L 25,75 Q 20,65 20,55 Z";
-
-minimapContent.append("path")
-    .attr("d", usOutlinePath)
-    .attr("fill", "rgba(100, 150, 200, 0.3)")
-    .attr("stroke", "rgba(150, 200, 255, 0.6)")
-    .attr("stroke-width", 1);
-
-// Add coastal region dots to minimap
-coastalRegions.forEach(region => {
-    minimapContent.append("circle")
-        .attr("cx", 20 + region.mapCoords.x * 110)
-        .attr("cy", 30 + region.mapCoords.y * 80)
-        .attr("r", 4)
-        .attr("fill", "#ff6b35")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1);
-});
+// Minimap content group for the small map
+const minimapContent = minimapGroup.append("g")
+    .attr("class", "minimap-content")
+    .attr("transform", "translate(5, 5)");
 
 // Create expanded map group (initially hidden)
 const expandedMapGroup = svg.append("g")
@@ -124,10 +107,10 @@ const expandedMapGroup = svg.append("g")
 
 // Expanded map background
 expandedMapGroup.append("rect")
-    .attr("x", -300)
-    .attr("y", -220)
-    .attr("width", 600)
-    .attr("height", 440)
+    .attr("x", -350)
+    .attr("y", -250)
+    .attr("width", 700)
+    .attr("height", 500)
     .attr("rx", 15)
     .attr("fill", "rgba(10, 20, 40, 0.95)")
     .attr("stroke", "rgba(255, 150, 100, 0.6)")
@@ -136,7 +119,7 @@ expandedMapGroup.append("rect")
 // Expanded map title
 expandedMapGroup.append("text")
     .attr("x", 0)
-    .attr("y", -180)
+    .attr("y", -210)
     .attr("text-anchor", "middle")
     .attr("fill", "#ffa500")
     .attr("font-size", "24px")
@@ -146,7 +129,7 @@ expandedMapGroup.append("text")
 // Close button for expanded map
 const closeButton = expandedMapGroup.append("g")
     .attr("class", "close-button")
-    .attr("transform", "translate(270, -190)")
+    .attr("transform", "translate(320, -220)")
     .style("cursor", "pointer");
 
 closeButton.append("circle")
@@ -163,121 +146,24 @@ closeButton.append("text")
     .attr("font-weight", "bold")
     .text("×");
 
-// Draw larger US map in expanded view
-const expandedMapContent = expandedMapGroup.append("g").attr("class", "expanded-map-content");
+// Group for the actual map
+const expandedMapContent = expandedMapGroup.append("g")
+    .attr("class", "expanded-map-content")
+    .attr("transform", "translate(0, -20)");
 
-// Larger US outline
-const largeUsPath = "M -250,-100 Q -230,-120 -200,-110 L -150,-90 Q -100,-100 -50,-80 L 0,-70 Q 50,-85 100,-70 L 150,-60 Q 200,-75 250,-55 L 280,-40 Q 270,0 260,50 L 250,100 Q 200,130 150,120 L 100,100 Q 50,120 0,110 L -50,90 Q -100,110 -150,100 L -200,70 Q -240,40 -250,0 Z";
-
-expandedMapContent.append("path")
-    .attr("d", largeUsPath)
-    .attr("fill", "rgba(100, 150, 200, 0.2)")
-    .attr("stroke", "rgba(150, 200, 255, 0.5)")
-    .attr("stroke-width", 2);
-
-// Add coastline highlights
-const coastlines = [
-    { path: "M -250,-100 Q -245,-50 -250,0 L -240,50", name: "Pacific" },
-    { path: "M 250,-55 Q 270,-20 260,50 L 250,100 Q 220,120 180,110", name: "Atlantic" },
-    { path: "M 180,110 Q 100,130 20,120 L -50,100", name: "Gulf" }
-];
-
-coastlines.forEach(coast => {
-    expandedMapContent.append("path")
-        .attr("d", coast.path)
-        .attr("fill", "none")
-        .attr("stroke", "#ff6b35")
-        .attr("stroke-width", 4)
-        .attr("stroke-linecap", "round")
-        .attr("opacity", 0.7);
-});
-
-// Add interactive region markers on expanded map
+// Group for region markers
 const regionMarkers = expandedMapGroup.append("g").attr("class", "region-markers");
-
-const markerPositions = [
-    { region: coastalRegions[0], x: -240, y: -30 },  // Pacific
-    { region: coastalRegions[1], x: 250, y: 30 },    // Atlantic
-    { region: coastalRegions[2], x: 80, y: 100 },    // Gulf
-    { region: coastalRegions[3], x: -220, y: 20 }    // Mediterranean
-];
-
-markerPositions.forEach(marker => {
-    const markerGroup = regionMarkers.append("g")
-        .attr("class", "region-marker")
-        .attr("transform", `translate(${marker.x}, ${marker.y})`)
-        .style("cursor", "pointer");
-    
-    // Pulsing outer ring
-    markerGroup.append("circle")
-        .attr("class", "pulse-ring")
-        .attr("r", 15)
-        .attr("fill", "none")
-        .attr("stroke", "#ff6b35")
-        .attr("stroke-width", 2)
-        .attr("opacity", 0.5);
-    
-    // Main marker
-    markerGroup.append("circle")
-        .attr("class", "marker-dot")
-        .attr("r", 10)
-        .attr("fill", "#ff6b35")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 2);
-    
-    // Label
-    markerGroup.append("text")
-        .attr("y", -20)
-        .attr("text-anchor", "middle")
-        .attr("fill", "#fff")
-        .attr("font-size", "12px")
-        .attr("font-weight", "bold")
-        .text(marker.region.name);
-    
-    // Click handler for region info
-    markerGroup.on("click", function(event) {
-        event.stopPropagation();
-        showRegionInfo(marker.region);
-    });
-    
-    // Hover effects
-    markerGroup.on("mouseenter", function() {
-        d3.select(this).select(".marker-dot")
-            .transition()
-            .duration(200)
-            .attr("r", 14)
-            .attr("fill", "#ffcc00");
-        d3.select(this).select(".pulse-ring")
-            .transition()
-            .duration(200)
-            .attr("r", 20)
-            .attr("opacity", 0.8);
-    });
-    
-    markerGroup.on("mouseleave", function() {
-        d3.select(this).select(".marker-dot")
-            .transition()
-            .duration(200)
-            .attr("r", 10)
-            .attr("fill", "#ff6b35");
-        d3.select(this).select(".pulse-ring")
-            .transition()
-            .duration(200)
-            .attr("r", 15)
-            .attr("opacity", 0.5);
-    });
-});
 
 // Info panel for region details
 const infoPanel = expandedMapGroup.append("g")
     .attr("class", "info-panel")
-    .attr("transform", "translate(0, 160)")
+    .attr("transform", "translate(0, 190)")
     .style("opacity", 0);
 
 infoPanel.append("rect")
-    .attr("x", -250)
+    .attr("x", -300)
     .attr("y", -30)
-    .attr("width", 500)
+    .attr("width", 600)
     .attr("height", 70)
     .attr("rx", 8)
     .attr("fill", "rgba(255, 100, 50, 0.15)")
@@ -311,7 +197,7 @@ function showRegionInfo(region) {
     let currentLine = 1;
     
     words.forEach(word => {
-        if (currentLine === 1 && line1.length + word.length < 70) {
+        if (currentLine === 1 && line1.length + word.length < 80) {
             line1 += (line1 ? ' ' : '') + word;
         } else {
             currentLine = 2;
@@ -329,6 +215,255 @@ function showRegionInfo(region) {
         .duration(300)
         .style("opacity", 1);
 }
+
+// Load and render the US map
+async function loadUSMap() {
+    try {
+        // Load TopoJSON data for US states
+        const response = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json');
+        const us = await response.json();
+        
+        usMapData = us;
+        
+        // Convert TopoJSON to GeoJSON
+        const states = topojson.feature(us, us.objects.states);
+        const statesOutline = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
+        const nationOutline = topojson.mesh(us, us.objects.states, (a, b) => a === b);
+        
+        // Create projection for expanded map
+        const projection = d3.geoAlbersUsa()
+            .scale(750)
+            .translate([0, 0]);
+        
+        const path = d3.geoPath().projection(projection);
+        
+        // Create projection for minimap
+        const minimapProjection = d3.geoAlbersUsa()
+            .scale(150)
+            .translate([70, 50]);
+        
+        const minimapPath = d3.geoPath().projection(minimapProjection);
+        
+        // Define coastal states for highlighting
+        const pacificStates = ["California", "Oregon", "Washington"];
+        const atlanticStates = ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"];
+        const gulfStates = ["Texas", "Louisiana", "Mississippi", "Alabama"];
+        
+        // State names lookup (FIPS codes)
+        const stateNames = {
+            "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas",
+            "06": "California", "08": "Colorado", "09": "Connecticut", "10": "Delaware",
+            "11": "District of Columbia", "12": "Florida", "13": "Georgia", "15": "Hawaii",
+            "16": "Idaho", "17": "Illinois", "18": "Indiana", "19": "Iowa",
+            "20": "Kansas", "21": "Kentucky", "22": "Louisiana", "23": "Maine",
+            "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota",
+            "28": "Mississippi", "29": "Missouri", "30": "Montana", "31": "Nebraska",
+            "32": "Nevada", "33": "New Hampshire", "34": "New Jersey", "35": "New Mexico",
+            "36": "New York", "37": "North Carolina", "38": "North Dakota", "39": "Ohio",
+            "40": "Oklahoma", "41": "Oregon", "42": "Pennsylvania", "44": "Rhode Island",
+            "45": "South Carolina", "46": "South Dakota", "47": "Tennessee", "48": "Texas",
+            "49": "Utah", "50": "Vermont", "51": "Virginia", "53": "Washington",
+            "54": "West Virginia", "55": "Wisconsin", "56": "Wyoming"
+        };
+        
+        // Draw states on expanded map
+        expandedMapContent.selectAll("path.state")
+            .data(states.features)
+            .enter()
+            .append("path")
+            .attr("class", "state")
+            .attr("d", path)
+            .attr("fill", d => {
+                const stateName = stateNames[d.id];
+                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.4)";
+                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.4)";
+                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.4)";
+                return "rgba(100, 150, 200, 0.2)";
+            })
+            .attr("stroke", "rgba(150, 200, 255, 0.5)")
+            .attr("stroke-width", 0.5);
+        
+        // Draw state borders
+        expandedMapContent.append("path")
+            .datum(statesOutline)
+            .attr("class", "state-borders")
+            .attr("d", path)
+            .attr("fill", "none")
+            .attr("stroke", "rgba(150, 200, 255, 0.6)")
+            .attr("stroke-width", 1);
+        
+        // Draw nation outline
+        expandedMapContent.append("path")
+            .datum(nationOutline)
+            .attr("class", "nation-outline")
+            .attr("d", path)
+            .attr("fill", "none")
+            .attr("stroke", "rgba(255, 150, 100, 0.8)")
+            .attr("stroke-width", 2);
+        
+        // Draw minimap states
+        minimapContent.selectAll("path.minimap-state")
+            .data(states.features)
+            .enter()
+            .append("path")
+            .attr("class", "minimap-state")
+            .attr("d", minimapPath)
+            .attr("fill", d => {
+                const stateName = stateNames[d.id];
+                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
+                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
+                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
+                return "rgba(100, 150, 200, 0.3)";
+            })
+            .attr("stroke", "rgba(150, 200, 255, 0.4)")
+            .attr("stroke-width", 0.3);
+        
+        // Draw minimap outline
+        minimapContent.append("path")
+            .datum(nationOutline)
+            .attr("class", "minimap-outline")
+            .attr("d", minimapPath)
+            .attr("fill", "none")
+            .attr("stroke", "rgba(255, 150, 100, 0.6)")
+            .attr("stroke-width", 1);
+        
+        // Add legend to expanded map
+        const legend = expandedMapGroup.append("g")
+            .attr("class", "legend")
+            .attr("transform", "translate(-300, 130)");
+        
+        const legendItems = [
+            { color: "rgba(255, 107, 53, 0.6)", label: "Pacific Coast" },
+            { color: "rgba(100, 200, 255, 0.6)", label: "Atlantic Coast" },
+            { color: "rgba(255, 200, 50, 0.6)", label: "Gulf Coast" }
+        ];
+        
+        legendItems.forEach((item, i) => {
+            const g = legend.append("g")
+                .attr("transform", `translate(${i * 150}, 0)`);
+            
+            g.append("rect")
+                .attr("width", 15)
+                .attr("height", 15)
+                .attr("rx", 3)
+                .attr("fill", item.color)
+                .attr("stroke", "rgba(255, 255, 255, 0.5)")
+                .attr("stroke-width", 1);
+            
+            g.append("text")
+                .attr("x", 22)
+                .attr("y", 12)
+                .attr("fill", "rgba(255, 255, 255, 0.8)")
+                .attr("font-size", "12px")
+                .text(item.label);
+        });
+        
+        // Add region markers
+        addRegionMarkers();
+        
+    } catch (error) {
+        console.error("Error loading map:", error);
+        // Fallback to simple representation if map fails to load
+        drawFallbackMap();
+    }
+}
+
+function addRegionMarkers() {
+    coastalRegions.forEach(region => {
+        const markerGroup = regionMarkers.append("g")
+            .attr("class", "region-marker")
+            .attr("transform", `translate(${region.markerPos.x}, ${region.markerPos.y})`)
+            .style("cursor", "pointer");
+        
+        // Pulsing outer ring
+        markerGroup.append("circle")
+            .attr("class", "pulse-ring")
+            .attr("r", 15)
+            .attr("fill", "none")
+            .attr("stroke", "#ff6b35")
+            .attr("stroke-width", 2)
+            .attr("opacity", 0.5);
+        
+        // Main marker
+        markerGroup.append("circle")
+            .attr("class", "marker-dot")
+            .attr("r", 10)
+            .attr("fill", "#ff6b35")
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2);
+        
+        // Label background
+        const labelText = region.name;
+        markerGroup.append("rect")
+            .attr("x", -labelText.length * 3.5 - 5)
+            .attr("y", -35)
+            .attr("width", labelText.length * 7 + 10)
+            .attr("height", 18)
+            .attr("rx", 4)
+            .attr("fill", "rgba(0, 0, 0, 0.7)");
+        
+        // Label
+        markerGroup.append("text")
+            .attr("y", -22)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#fff")
+            .attr("font-size", "11px")
+            .attr("font-weight", "bold")
+            .text(region.name);
+        
+        // Click handler for region info
+        markerGroup.on("click", function(event) {
+            event.stopPropagation();
+            showRegionInfo(region);
+        });
+        
+        // Hover effects
+        markerGroup.on("mouseenter", function() {
+            d3.select(this).select(".marker-dot")
+                .transition()
+                .duration(200)
+                .attr("r", 14)
+                .attr("fill", "#ffcc00");
+            d3.select(this).select(".pulse-ring")
+                .transition()
+                .duration(200)
+                .attr("r", 20)
+                .attr("opacity", 0.8);
+        });
+        
+        markerGroup.on("mouseleave", function() {
+            d3.select(this).select(".marker-dot")
+                .transition()
+                .duration(200)
+                .attr("r", 10)
+                .attr("fill", "#ff6b35");
+            d3.select(this).select(".pulse-ring")
+                .transition()
+                .duration(200)
+                .attr("r", 15)
+                .attr("opacity", 0.5);
+        });
+    });
+}
+
+function drawFallbackMap() {
+    // Simple fallback if TopoJSON fails to load
+    const usOutlinePath = "M -250,-100 Q -230,-120 -200,-110 L -150,-90 Q -100,-100 -50,-80 L 0,-70 Q 50,-85 100,-70 L 150,-60 Q 200,-75 250,-55 L 280,-40 Q 270,0 260,50 L 250,100 Q 200,130 150,120 L 100,100 Q 50,120 0,110 L -50,90 Q -100,110 -150,100 L -200,70 Q -240,40 -250,0 Z";
+    
+    expandedMapContent.append("path")
+        .attr("d", usOutlinePath)
+        .attr("fill", "rgba(100, 150, 200, 0.2)")
+        .attr("stroke", "rgba(150, 200, 255, 0.5)")
+        .attr("stroke-width", 2);
+    
+    addRegionMarkers();
+}
+
+// Load TopoJSON library and then the map
+const topojsonScript = document.createElement('script');
+topojsonScript.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3';
+topojsonScript.onload = loadUSMap;
+document.head.appendChild(topojsonScript);
 
 // Pot body
 const pot = potGroup.append("ellipse")
@@ -459,7 +594,7 @@ closeButton.on("click", function(event) {
     toggleMapExpansion();
 });
 
-// Add pulsing animation to minimap markers
+// Add pulsing animation to markers
 function pulseMarkers() {
     regionMarkers.selectAll(".pulse-ring")
         .transition()
@@ -472,7 +607,9 @@ function pulseMarkers() {
         .attr("opacity", 0.5)
         .on("end", pulseMarkers);
 }
-pulseMarkers();
+
+// Start pulsing after a delay to let markers load
+setTimeout(pulseMarkers, 1000);
 
 function updateVisualization(step) {
     currentStep = step;
