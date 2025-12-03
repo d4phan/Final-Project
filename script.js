@@ -893,3 +893,181 @@ slider.addEventListener('keydown', function(e) {
 
 // Initialize
 predictionDisplay.textContent = `+${slider.value}°C`;
+
+// ==============================================
+// TEMPERATURE PREDICTION FEATURE
+// ==============================================
+
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', function() {
+    // Get elements
+    const slider = document.getElementById('temperature-slider');
+    const predictionValue = document.getElementById('prediction-value');
+    const submitBtn = document.getElementById('submit-prediction');
+    const tryAgainBtn = document.getElementById('try-again');
+    const resultsSection = document.getElementById('prediction-results');
+    const userPredictionDisplay = document.getElementById('user-prediction');
+    const actualProjectionDisplay = document.getElementById('actual-projection');
+    const temperatureDifference = document.getElementById('temperature-difference');
+    const resultMessage = document.getElementById('result-message');
+    const accuracyFeedback = document.getElementById('accuracy-feedback');
+    const feedbackText = document.getElementById('slider-feedback-text');
+    
+    const ACTUAL_PROJECTION = 4.8; // Actual projected increase by 2050
+    
+    // Function to update slider feedback text
+    function updateSliderFeedback(value) {
+        if (!feedbackText) return;
+        
+        if (value < 1.6) {
+            feedbackText.textContent = "Optimistic - below Paris Agreement targets";
+        } else if (value < 2.6) {
+            feedbackText.textContent = "Paris Agreement goal range";
+        } else if (value < 3.6) {
+            feedbackText.textContent = "Current policy trajectory";
+        } else if (value < 4.6) {
+            feedbackText.textContent = "Significant coastal impacts expected";
+        } else {
+            feedbackText.textContent = "Severe coastal disruption";
+        }
+    }
+    
+    // Update prediction display when slider moves
+    if (slider && predictionValue) {
+        slider.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            predictionValue.textContent = `+${value.toFixed(1)}°C`;
+            updateSliderFeedback(value);
+        });
+        
+        // Initialize display
+        predictionValue.textContent = `+${parseFloat(slider.value).toFixed(1)}°C`;
+        updateSliderFeedback(parseFloat(slider.value));
+    }
+    
+    // Function to show accuracy feedback
+    function showAccuracyFeedback(userPrediction) {
+        const actual = ACTUAL_PROJECTION;
+        const difference = actual - userPrediction;
+        const absDifference = Math.abs(difference);
+        
+        // Update all display elements
+        if (userPredictionDisplay) {
+            userPredictionDisplay.textContent = userPrediction.toFixed(1);
+        }
+        
+        if (actualProjectionDisplay) {
+            actualProjectionDisplay.textContent = actual.toFixed(1);
+        }
+        
+        if (temperatureDifference) {
+            temperatureDifference.textContent = `${difference >= 0 ? '+' : ''}${difference.toFixed(1)}°C`;
+        }
+        
+        // Determine accuracy level and set messages
+        let message, details;
+        
+        if (absDifference <= 0.3) {
+            message = "🎯 Excellent! Very accurate prediction!";
+            details = "Your estimate is remarkably close to scientific projections.";
+        } 
+        else if (absDifference <= 0.8) {
+            message = "📊 Good estimate!";
+            details = `Your prediction was off by ${absDifference.toFixed(1)}°C. That's a solid understanding of climate trends.`;
+        }
+        else if (absDifference <= 1.5) {
+            message = "📈 In the right range";
+            details = `Your estimate is ${absDifference.toFixed(1)}°C from the projection. The reality is more severe than many expect.`;
+        }
+        else if (absDifference <= 2.5) {
+            message = "🔽 Significant difference";
+            details = `Projections show ${difference > 0 ? "higher" : "lower"} warming than you predicted. Climate models indicate ${actual.toFixed(1)}°C increase.`;
+        }
+        else {
+            message = "⚠️ Large discrepancy";
+            details = `There's a ${absDifference.toFixed(1)}°C difference. Coastal zones are projected to warm more dramatically.`;
+        }
+        
+        // Additional context based on over/underestimation
+        if (userPrediction < actual - 0.5) {
+            details += " Many people underestimate how much coastal areas are warming.";
+        } else if (userPrediction > actual + 0.5) {
+            details += " While your estimate is high, some worst-case scenarios do reach these levels.";
+        }
+        
+        // Set messages
+        if (resultMessage) {
+            resultMessage.textContent = message;
+        }
+        
+        if (accuracyFeedback) {
+            accuracyFeedback.textContent = details;
+        }
+        
+        // Show results section
+        if (resultsSection) {
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+    
+    // Handle submit button
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function() {
+            const userPrediction = parseFloat(slider.value);
+            showAccuracyFeedback(userPrediction);
+        });
+    }
+    
+    // Handle try again button
+    if (tryAgainBtn) {
+        tryAgainBtn.addEventListener('click', function() {
+            // Reset slider
+            if (slider) {
+                slider.value = 2.5;
+            }
+            
+            // Reset prediction display
+            if (predictionValue) {
+                predictionValue.textContent = '+2.5°C';
+            }
+            
+            // Reset feedback text
+            if (feedbackText) {
+                feedbackText.textContent = "Moderate increase projected by many climate models";
+            }
+            
+            // Hide results section
+            if (resultsSection) {
+                resultsSection.style.display = 'none';
+            }
+            
+            // Focus back on slider
+            if (slider) {
+                slider.focus();
+            }
+        });
+    }
+    
+    // Handle share button (optional basic functionality)
+    const shareBtn = document.getElementById('share-results');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', function() {
+            const userTemp = parseFloat(slider.value).toFixed(1);
+            const shareText = `I predicted a ${userTemp}°C temperature rise in coastal zones by 2050. The actual projection is 4.8°C. Test your climate intuition!`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Climate Prediction',
+                    text: shareText,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: Copy to clipboard
+                navigator.clipboard.writeText(shareText)
+                    .then(() => alert('Results copied to clipboard!'))
+                    .catch(() => alert('Could not share results.'));
+            }
+        });
+    }
+});
