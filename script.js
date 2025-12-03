@@ -18,28 +18,28 @@ const coastalRegions = [
         baseTemp: 18,
         info: "The Pacific Coast stretches from Alaska to California, experiencing significant warming trends. Rising ocean temperatures are affecting marine ecosystems and coastal communities.",
         states: ["California", "Oregon", "Washington"],
-        markerPos: { x: -230, y: 20 }
+        markerPos: { x: -320, y: 30 }
     },
     { 
         name: "Atlantic Coast", 
         baseTemp: 16,
         info: "The Atlantic Coast from Maine to Florida faces increasing hurricane intensity and sea level rise. Coastal erosion threatens infrastructure and habitats.",
         states: ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"],
-        markerPos: { x: 220, y: -20 }
+        markerPos: { x: 310, y: -10 }
     },
     { 
         name: "Gulf Coast", 
         baseTemp: 22,
         info: "The Gulf Coast experiences some of the fastest warming rates. Wetland loss, intensified storms, and heat waves pose major challenges to this region.",
         states: ["Texas", "Louisiana", "Mississippi", "Alabama", "Florida"],
-        markerPos: { x: 80, y: 100 }
+        markerPos: { x: 120, y: 140 }
     },
     { 
         name: "Mediterranean Climate", 
         baseTemp: 19,
         info: "Mediterranean climate zones in California are shifting toward more extreme dry heat conditions, increasing wildfire risk and water scarcity.",
         states: ["California"],
-        markerPos: { x: -220, y: 60 }
+        markerPos: { x: -310, y: 90 }
     }
 ];
 
@@ -98,19 +98,23 @@ const minimapContent = minimapGroup.append("g")
     .attr("class", "minimap-content")
     .attr("transform", "translate(5, 5)");
 
-// Create expanded map group (initially hidden)
+// Create expanded map group (initially hidden) - CENTERED
 const expandedMapGroup = svg.append("g")
     .attr("class", "expanded-map-group")
     .attr("transform", `translate(${width/2}, ${height/2})`)
     .style("opacity", 0)
     .style("pointer-events", "none");
 
-// Expanded map background
+// Map box dimensions - BIGGER
+const mapBoxWidth = 800;
+const mapBoxHeight = 480;
+
+// Expanded map background box
 expandedMapGroup.append("rect")
-    .attr("x", -350)
-    .attr("y", -250)
-    .attr("width", 700)
-    .attr("height", 500)
+    .attr("x", -mapBoxWidth/2)
+    .attr("y", -mapBoxHeight/2 - 40)
+    .attr("width", mapBoxWidth)
+    .attr("height", mapBoxHeight)
     .attr("rx", 15)
     .attr("fill", "rgba(10, 20, 40, 0.95)")
     .attr("stroke", "rgba(255, 150, 100, 0.6)")
@@ -119,21 +123,21 @@ expandedMapGroup.append("rect")
 // Expanded map title
 expandedMapGroup.append("text")
     .attr("x", 0)
-    .attr("y", -210)
+    .attr("y", -mapBoxHeight/2 - 10)
     .attr("text-anchor", "middle")
     .attr("fill", "#ffa500")
-    .attr("font-size", "24px")
+    .attr("font-size", "28px")
     .attr("font-family", "'Playfair Display', serif")
     .text("Coastal Regions at Risk");
 
 // Close button for expanded map
 const closeButton = expandedMapGroup.append("g")
     .attr("class", "close-button")
-    .attr("transform", "translate(320, -220)")
+    .attr("transform", `translate(${mapBoxWidth/2 - 30}, ${-mapBoxHeight/2 - 10})`)
     .style("cursor", "pointer");
 
 closeButton.append("circle")
-    .attr("r", 15)
+    .attr("r", 18)
     .attr("fill", "rgba(255, 100, 100, 0.3)")
     .attr("stroke", "#ff6b6b")
     .attr("stroke-width", 2);
@@ -142,11 +146,11 @@ closeButton.append("text")
     .attr("text-anchor", "middle")
     .attr("dy", "0.35em")
     .attr("fill", "#ff6b6b")
-    .attr("font-size", "18px")
+    .attr("font-size", "22px")
     .attr("font-weight", "bold")
     .text("×");
 
-// Group for the actual map
+// Group for the actual map - adjusted position
 const expandedMapContent = expandedMapGroup.append("g")
     .attr("class", "expanded-map-content")
     .attr("transform", "translate(0, -20)");
@@ -154,20 +158,76 @@ const expandedMapContent = expandedMapGroup.append("g")
 // Group for region markers
 const regionMarkers = expandedMapGroup.append("g").attr("class", "region-markers");
 
-// Info panel for region details
+// Legend box dimensions
+const legendBoxWidth = mapBoxWidth;
+const legendBoxHeight = 60;
+const legendBoxY = mapBoxHeight/2 - 30;
+
+// Legend box background - SEPARATE BOX BELOW MAP
+const legendBox = expandedMapGroup.append("g")
+    .attr("class", "legend-box")
+    .attr("transform", `translate(0, ${legendBoxY})`);
+
+legendBox.append("rect")
+    .attr("x", -legendBoxWidth/2)
+    .attr("y", 0)
+    .attr("width", legendBoxWidth)
+    .attr("height", legendBoxHeight)
+    .attr("rx", 10)
+    .attr("fill", "rgba(10, 20, 40, 0.95)")
+    .attr("stroke", "rgba(255, 150, 100, 0.6)")
+    .attr("stroke-width", 2);
+
+// Legend content
+const legendContent = legendBox.append("g")
+    .attr("transform", `translate(0, ${legendBoxHeight/2})`);
+
+const legendItems = [
+    { color: "rgba(255, 107, 53, 0.7)", label: "Pacific Coast" },
+    { color: "rgba(100, 200, 255, 0.7)", label: "Atlantic Coast" },
+    { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" }
+];
+
+const legendSpacing = 200;
+const legendStartX = -legendSpacing;
+
+legendItems.forEach((item, i) => {
+    const g = legendContent.append("g")
+        .attr("transform", `translate(${legendStartX + i * legendSpacing}, 0)`);
+    
+    g.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("rx", 4)
+        .attr("fill", item.color)
+        .attr("stroke", "rgba(255, 255, 255, 0.6)")
+        .attr("stroke-width", 1);
+    
+    g.append("text")
+        .attr("x", 18)
+        .attr("y", 5)
+        .attr("fill", "rgba(255, 255, 255, 0.9)")
+        .attr("font-size", "14px")
+        .attr("font-weight", "500")
+        .text(item.label);
+});
+
+// Info panel for region details - positioned above legend
 const infoPanel = expandedMapGroup.append("g")
     .attr("class", "info-panel")
-    .attr("transform", "translate(0, 190)")
+    .attr("transform", `translate(0, ${legendBoxY - 70})`)
     .style("opacity", 0);
 
 infoPanel.append("rect")
-    .attr("x", -300)
-    .attr("y", -30)
-    .attr("width", 600)
-    .attr("height", 70)
+    .attr("x", -mapBoxWidth/2 + 20)
+    .attr("y", -25)
+    .attr("width", mapBoxWidth - 40)
+    .attr("height", 60)
     .attr("rx", 8)
-    .attr("fill", "rgba(255, 100, 50, 0.15)")
-    .attr("stroke", "rgba(255, 150, 100, 0.4)")
+    .attr("fill", "rgba(255, 100, 50, 0.2)")
+    .attr("stroke", "rgba(255, 150, 100, 0.5)")
     .attr("stroke-width", 1);
 
 const infoTitle = infoPanel.append("text")
@@ -182,9 +242,9 @@ const infoTitle = infoPanel.append("text")
 const infoText = infoPanel.append("text")
     .attr("class", "info-text")
     .attr("x", 0)
-    .attr("y", 20)
+    .attr("y", 18)
     .attr("text-anchor", "middle")
-    .attr("fill", "rgba(255, 255, 255, 0.85)")
+    .attr("fill", "rgba(255, 255, 255, 0.9)")
     .attr("font-size", "13px");
 
 function showRegionInfo(region) {
@@ -197,7 +257,7 @@ function showRegionInfo(region) {
     let currentLine = 1;
     
     words.forEach(word => {
-        if (currentLine === 1 && line1.length + word.length < 80) {
+        if (currentLine === 1 && line1.length + word.length < 100) {
             line1 += (line1 ? ' ' : '') + word;
         } else {
             currentLine = 2;
@@ -230,9 +290,9 @@ async function loadUSMap() {
         const statesOutline = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
         const nationOutline = topojson.mesh(us, us.objects.states, (a, b) => a === b);
         
-        // Create projection for expanded map
+        // Create projection for expanded map - BIGGER SCALE
         const projection = d3.geoAlbersUsa()
-            .scale(750)
+            .scale(1000)
             .translate([0, 0]);
         
         const path = d3.geoPath().projection(projection);
@@ -275,12 +335,12 @@ async function loadUSMap() {
             .attr("d", path)
             .attr("fill", d => {
                 const stateName = stateNames[d.id];
-                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.4)";
-                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.4)";
-                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.4)";
-                return "rgba(100, 150, 200, 0.2)";
+                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
+                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
+                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
+                return "rgba(100, 150, 200, 0.25)";
             })
-            .attr("stroke", "rgba(150, 200, 255, 0.5)")
+            .attr("stroke", "rgba(150, 200, 255, 0.4)")
             .attr("stroke-width", 0.5);
         
         // Draw state borders
@@ -327,37 +387,6 @@ async function loadUSMap() {
             .attr("stroke", "rgba(255, 150, 100, 0.6)")
             .attr("stroke-width", 1);
         
-        // Add legend to expanded map
-        const legend = expandedMapGroup.append("g")
-            .attr("class", "legend")
-            .attr("transform", "translate(-300, 130)");
-        
-        const legendItems = [
-            { color: "rgba(255, 107, 53, 0.6)", label: "Pacific Coast" },
-            { color: "rgba(100, 200, 255, 0.6)", label: "Atlantic Coast" },
-            { color: "rgba(255, 200, 50, 0.6)", label: "Gulf Coast" }
-        ];
-        
-        legendItems.forEach((item, i) => {
-            const g = legend.append("g")
-                .attr("transform", `translate(${i * 150}, 0)`);
-            
-            g.append("rect")
-                .attr("width", 15)
-                .attr("height", 15)
-                .attr("rx", 3)
-                .attr("fill", item.color)
-                .attr("stroke", "rgba(255, 255, 255, 0.5)")
-                .attr("stroke-width", 1);
-            
-            g.append("text")
-                .attr("x", 22)
-                .attr("y", 12)
-                .attr("fill", "rgba(255, 255, 255, 0.8)")
-                .attr("font-size", "12px")
-                .text(item.label);
-        });
-        
         // Add region markers
         addRegionMarkers();
         
@@ -378,7 +407,7 @@ function addRegionMarkers() {
         // Pulsing outer ring
         markerGroup.append("circle")
             .attr("class", "pulse-ring")
-            .attr("r", 15)
+            .attr("r", 18)
             .attr("fill", "none")
             .attr("stroke", "#ff6b35")
             .attr("stroke-width", 2)
@@ -387,27 +416,28 @@ function addRegionMarkers() {
         // Main marker
         markerGroup.append("circle")
             .attr("class", "marker-dot")
-            .attr("r", 10)
+            .attr("r", 12)
             .attr("fill", "#ff6b35")
             .attr("stroke", "#fff")
             .attr("stroke-width", 2);
         
         // Label background
         const labelText = region.name;
+        const labelWidth = labelText.length * 7 + 16;
         markerGroup.append("rect")
-            .attr("x", -labelText.length * 3.5 - 5)
-            .attr("y", -35)
-            .attr("width", labelText.length * 7 + 10)
-            .attr("height", 18)
-            .attr("rx", 4)
-            .attr("fill", "rgba(0, 0, 0, 0.7)");
+            .attr("x", -labelWidth/2)
+            .attr("y", -38)
+            .attr("width", labelWidth)
+            .attr("height", 22)
+            .attr("rx", 5)
+            .attr("fill", "rgba(0, 0, 0, 0.8)");
         
         // Label
         markerGroup.append("text")
             .attr("y", -22)
             .attr("text-anchor", "middle")
             .attr("fill", "#fff")
-            .attr("font-size", "11px")
+            .attr("font-size", "12px")
             .attr("font-weight", "bold")
             .text(region.name);
         
@@ -422,12 +452,12 @@ function addRegionMarkers() {
             d3.select(this).select(".marker-dot")
                 .transition()
                 .duration(200)
-                .attr("r", 14)
+                .attr("r", 16)
                 .attr("fill", "#ffcc00");
             d3.select(this).select(".pulse-ring")
                 .transition()
                 .duration(200)
-                .attr("r", 20)
+                .attr("r", 24)
                 .attr("opacity", 0.8);
         });
         
@@ -435,12 +465,12 @@ function addRegionMarkers() {
             d3.select(this).select(".marker-dot")
                 .transition()
                 .duration(200)
-                .attr("r", 10)
+                .attr("r", 12)
                 .attr("fill", "#ff6b35");
             d3.select(this).select(".pulse-ring")
                 .transition()
                 .duration(200)
-                .attr("r", 15)
+                .attr("r", 18)
                 .attr("opacity", 0.5);
         });
     });
@@ -448,7 +478,7 @@ function addRegionMarkers() {
 
 function drawFallbackMap() {
     // Simple fallback if TopoJSON fails to load
-    const usOutlinePath = "M -250,-100 Q -230,-120 -200,-110 L -150,-90 Q -100,-100 -50,-80 L 0,-70 Q 50,-85 100,-70 L 150,-60 Q 200,-75 250,-55 L 280,-40 Q 270,0 260,50 L 250,100 Q 200,130 150,120 L 100,100 Q 50,120 0,110 L -50,90 Q -100,110 -150,100 L -200,70 Q -240,40 -250,0 Z";
+    const usOutlinePath = "M -300,-120 Q -270,-150 -230,-140 L -150,-110 Q -80,-130 0,-100 L 80,-90 Q 150,-110 220,-90 L 300,-70 Q 320,-20 310,40 L 300,100 Q 240,140 160,130 L 80,110 Q 20,130 -40,120 L -120,100 Q -200,130 -260,100 L -300,50 Q -320,0 -300,-60 Z";
     
     expandedMapContent.append("path")
         .attr("d", usOutlinePath)
@@ -599,11 +629,11 @@ function pulseMarkers() {
     regionMarkers.selectAll(".pulse-ring")
         .transition()
         .duration(1000)
-        .attr("r", 20)
+        .attr("r", 24)
         .attr("opacity", 0.2)
         .transition()
         .duration(1000)
-        .attr("r", 15)
+        .attr("r", 18)
         .attr("opacity", 0.5)
         .on("end", pulseMarkers);
 }
