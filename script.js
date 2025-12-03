@@ -98,16 +98,19 @@ const minimapContent = minimapGroup.append("g")
     .attr("class", "minimap-content")
     .attr("transform", "translate(5, 5)");
 
-// Create expanded map group (initially hidden) - CENTERED
+// SHIFT everything to the right - offset from center
+const rightShift = 120;
+
+// Create expanded map group (initially hidden) - SHIFTED RIGHT
 const expandedMapGroup = svg.append("g")
     .attr("class", "expanded-map-group")
-    .attr("transform", `translate(${width/2}, ${height/2})`)
+    .attr("transform", `translate(${width/2 + rightShift}, ${height/2})`)
     .style("opacity", 0)
     .style("pointer-events", "none");
 
-// Layout dimensions
-const mapBoxWidth = 750;
-const mapBoxHeight = 450;
+// Layout dimensions - BIGGER map box
+const mapBoxWidth = 820;
+const mapBoxHeight = 520;
 const legendBoxWidth = 180;
 const legendBoxHeight = mapBoxHeight;
 const infoBoxWidth = mapBoxWidth + legendBoxWidth + 15;
@@ -118,7 +121,7 @@ const gap = 15;
 const totalWidth = mapBoxWidth + gap + legendBoxWidth;
 const offsetX = -totalWidth / 2;
 
-// Map box background
+// Map box background - BIGGER
 expandedMapGroup.append("rect")
     .attr("x", offsetX)
     .attr("y", -mapBoxHeight/2 - 40)
@@ -190,8 +193,8 @@ const legendItems = [
     { color: "rgba(100, 150, 200, 0.4)", label: "Other States" }
 ];
 
-const legendStartY = 70;
-const legendItemSpacing = 50;
+const legendStartY = 80;
+const legendItemSpacing = 55;
 
 legendItems.forEach((item, i) => {
     const g = legendBox.append("g")
@@ -218,7 +221,7 @@ legendItems.forEach((item, i) => {
 // Instructions text in legend
 legendBox.append("text")
     .attr("x", legendBoxWidth/2)
-    .attr("y", legendBoxHeight - 60)
+    .attr("y", legendBoxHeight - 70)
     .attr("text-anchor", "middle")
     .attr("fill", "rgba(255, 150, 100, 0.7)")
     .attr("font-size", "11px")
@@ -226,7 +229,7 @@ legendBox.append("text")
 
 legendBox.append("text")
     .attr("x", legendBoxWidth/2)
-    .attr("y", legendBoxHeight - 45)
+    .attr("y", legendBoxHeight - 55)
     .attr("text-anchor", "middle")
     .attr("fill", "rgba(255, 150, 100, 0.7)")
     .attr("font-size", "11px")
