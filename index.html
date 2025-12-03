@@ -3,78 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coastal Warming Hotpot - Scrollytelling</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Are Temperate Coastal Zones Entering a New Era of "Dry Heat"?</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/scrollama/3.2.0/scrollama.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Hero Section -->
-    <section id="hero">
-        <div class="hero-content">
+    <div id="header">
+        <div id="header-content">
             <h1>Are Temperate Coastal Zones Entering a New Era of "Dry Heat"?</h1>
-            <p class="subtitle">A Hotpot Story</p>
-            <p class="scroll-hint">↓ Scroll to begin ↓</p>
+            <p class="subtitle">An exploration of rising temperatures in coastal regions projected to 2050</p>
         </div>
-    </section>
-
-    <!-- Main Scrollytelling Section -->
-    <section id="scrolly">
-        <figure class="sticky-figure">
-            <svg id="hotpot-viz" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"></svg>
-        </figure>
-
-        <article>
-            <div class="step" data-step="0">
-                <div class="step-content">
-                    <p>Fresh ingredients await...</p>
-                </div>
-            </div>
-            <div class="step" data-step="1">
-                <div class="step-content">
-                    <p>Regional ingredients represent coastal areas</p>
-                </div>
-            </div>
-            <div class="step" data-step="2">
-                <div class="step-content">
-                    <p>The pot fills with warming predictions</p>
-                </div>
-            </div>
-            <div class="step" data-step="3">
-                <div class="step-content">
-                    <p>Temperature rises as climate changes</p>
-                </div>
-            </div>
-            <div class="step" data-step="4">
-                <div class="step-content">
-                    <p>All regions begin to feel the heat</p>
-                </div>
-            </div>
-            <div class="step" data-step="5">
-                <div class="step-content">
-                    <p>By 2050, all coastal regions show significant warming</p>
-                </div>
-            </div>
-        </article>
-    </section>
-
-    <!-- Info Panel -->
-    <div id="info-panel" class="info-panel">
-        <button id="close-panel" class="close-btn">&times;</button>
-        <h2 id="panel-title"></h2>
-        <div id="panel-badge"></div>
-        <p id="panel-description"></p>
-        <h3>Temperature Projection (2020-2050)</h3>
-        <svg id="panel-chart"></svg>
-        <div class="panel-footer">
-            <p id="panel-ingredient"></p>
+        <div class="heat-wave"></div>
+        <div class="scroll-indicator">
+            <span></span>
         </div>
     </div>
 
-    <div id="panel-overlay" class="panel-overlay"></div>
+    <div id="scrolly-section">
+        <div id="vis-container">
+            <svg id="visualization"></svg>
+            <div class="knob-indicator">
+                <div class="knob">
+                    <div class="knob-marker"></div>
+                </div>
+                <div class="knob-label">Temperature</div>
+            </div>
+        </div>
 
-    <!-- Spacer -->
-    <section style="height: 100vh;"></section>
+        <div id="steps">
+            <div class="step" data-step="0">
+                <div class="step-content">
+                    <h2>Present Day (2024)</h2>
+                    <p>Coastal regions maintain moderate temperatures with seasonal variation. Our "crockpot" of coastal zones begins at baseline temperatures.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="1">
+                <div class="step-content">
+                    <h2>2030 Projection</h2>
+                    <p>The Pacific Coast begins to warm significantly, with average temperatures rising 1.2°C above baseline. The heat begins to build.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="2">
+                <div class="step-content">
+                    <h2>2035 Projection</h2>
+                    <p>Atlantic and Gulf Coast regions join the warming trend. Temperature increases accelerate to 2.1°C above baseline.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="3">
+                <div class="step-content">
+                    <h2>2040 Projection</h2>
+                    <p>Mediterranean-climate zones experience severe "dry heat" episodes. The crockpot is now simmering at 3.5°C above baseline.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="4">
+                <div class="step-content">
+                    <h2>2050 Projection</h2>
+                    <p>All temperate coastal zones reach critical warming thresholds. Average temperatures are 4.8°C above 2024 baseline—our crockpot is boiling.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer">
+        <div id="footer-content">
+            <h2>🔥 By 2050: A Burning Reality 🔥</h2>
+            <div class="projection-stats">
+                <div class="stat">
+                    <div class="stat-value">+4.8°C</div>
+                    <div class="stat-label">Average Temperature Rise</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">85%</div>
+                    <div class="stat-label">Coastal Zones Affected</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Days Over 35°C</div>
+                </div>
+            </div>
+            <p style="margin-top: 2rem; font-size: 1.2rem; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.7;">
+                The data is clear: temperate coastal zones are transitioning into a new climate regime characterized by prolonged dry heat. Immediate action is needed to mitigate these projected increases.
+            </p>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
