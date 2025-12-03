@@ -71,6 +71,138 @@
         </div>
     </div>
 
+    <div id="prediction-section">
+    <div class="prediction-container">
+        <h2>How Much Do You Think Temperatures Will Rise?</h2>
+        <p class="prediction-subtitle">Test your climate intuition by predicting the average temperature increase by 2050</p>
+        
+        <div class="prediction-interface">
+            <!-- Temperature Slider -->
+            <div class="prediction-slider-container">
+                <div class="slider-header">
+                    <span class="slider-label">Your Prediction:</span>
+                    <span class="slider-value" id="prediction-value">+2.5°C</span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="temperature-slider" min="0" max="7" step="0.1" value="2.5" class="temperature-slider">
+                    <div class="slider-ticks">
+                        <span class="tick">0°C</span>
+                        <span class="tick">1°C</span>
+                        <span class="tick">2°C</span>
+                        <span class="tick">3°C</span>
+                        <span class="tick">4°C</span>
+                        <span class="tick">5°C</span>
+                        <span class="tick">6°C</span>
+                        <span class="tick">7°C</span>
+                    </div>
+                </div>
+                <div class="slider-feedback">
+                    <span id="slider-feedback-text">Moderate increase projected by many climate models</span>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button id="submit-prediction" class="submit-btn">
+                Compare with Projection
+            </button>
+            
+            <!-- Results Display -->
+            <div id="prediction-results" class="prediction-results" style="display: none;">
+                <div class="result-card">
+                    <h3>Your Prediction vs Actual Projection</h3>
+                    
+                    <div class="comparison-container">
+                        <!-- User's Prediction -->
+                        <div class="prediction-column user-prediction">
+                            <div class="prediction-header">
+                                <div class="prediction-type">Your Guess</div>
+                                <div class="temperature-display">
+                                    +<span id="user-prediction">2.5</span>°C
+                                </div>
+                            </div>
+                            <div class="impact-indicator" id="user-impact-indicator">
+                                <div class="impact-bar"></div>
+                                <div class="impact-label">Impact Level</div>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- VS Separator -->
+                        <div class="vs-separator">
+                            <div class="vs-circle">VS</div>
+                        </div>
+                        
+                        <!-- Actual Projection -->
+                        <div class="prediction-column actual-projection">
+                            <div class="prediction-header">
+                                <div class="prediction-type">2050 Projection</div>
+                                <div class="temperature-display">
+                                    +<span id="actual-projection">4.8</span>°C
+                                </div>
+                            </div>
+                            <div class="impact-indicator" id="actual-impact-indicator">
+                                <div class="impact-bar"></div>
+                                <div class="impact-label">Impact Level</div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Result Message -->
+                    <div class="result-summary">
+                        <div class="difference-display">
+                            <span class="difference-label">Difference:</span>
+                            <span class="difference-value" id="temperature-difference">+2.3°C</span>
+                        </div>
+                        <div id="result-message" class="result-message"></div>
+                        <div class="accuracy-feedback" id="accuracy-feedback">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Learn More -->
+                    <div class="learn-more">
+                        <h4>Why the Difference Matters</h4>
+                        <p>Every 0.5°C of additional warming significantly increases risks of extreme heatwaves, sea-level rise, and ecosystem disruption in coastal zones.</p>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button id="try-again" class="try-again-btn">
+                            Make Another Prediction
+                        </button>
+                        <button id="share-results" class="share-btn">
+                            Share Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Climate Context -->
+        <div class="climate-context">
+            <h4>Climate Context</h4>
+            <div class="context-grid">
+                <div class="context-card">
+                    <div class="context-icon">🌡️</div>
+                    <h5>Paris Agreement Goal</h5>
+                    <p>Limit warming to well below 2°C, preferably to 1.5°C</p>
+                </div>
+                <div class="context-card">
+                    <div class="context-icon">🌊</div>
+                    <h5>Coastal Impact</h5>
+                    <p>Coastal areas warm faster than global average</p>
+                </div>
+                <div class="context-card">
+                    <div class="context-icon">🔥</div>
+                    <h5>Current Trajectory</h5>
+                    <p>Current policies put us on track for ~3°C warming</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
     <div id="footer">
         <div id="footer-content">
             <h2>🔥 By 2050: A Burning Reality 🔥</h2>
