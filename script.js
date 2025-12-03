@@ -18,28 +18,28 @@ const coastalRegions = [
         baseTemp: 18,
         info: "The Pacific Coast stretches from Alaska to California, experiencing significant warming trends. Rising ocean temperatures are affecting marine ecosystems and coastal communities.",
         states: ["California", "Oregon", "Washington"],
-        markerPos: { x: -320, y: 30 }
+        markerPos: { x: -320, y: -20 }
     },
     { 
         name: "Atlantic Coast", 
         baseTemp: 16,
         info: "The Atlantic Coast from Maine to Florida faces increasing hurricane intensity and sea level rise. Coastal erosion threatens infrastructure and habitats.",
         states: ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"],
-        markerPos: { x: 310, y: -10 }
+        markerPos: { x: 310, y: -60 }
     },
     { 
         name: "Gulf Coast", 
         baseTemp: 22,
         info: "The Gulf Coast experiences some of the fastest warming rates. Wetland loss, intensified storms, and heat waves pose major challenges to this region.",
         states: ["Texas", "Louisiana", "Mississippi", "Alabama", "Florida"],
-        markerPos: { x: 120, y: 140 }
+        markerPos: { x: 120, y: 90 }
     },
     { 
         name: "Mediterranean Climate", 
         baseTemp: 19,
         info: "Mediterranean climate zones in California are shifting toward more extreme dry heat conditions, increasing wildfire risk and water scarcity.",
         states: ["California"],
-        markerPos: { x: -310, y: 90 }
+        markerPos: { x: -310, y: 40 }
     }
 ];
 
@@ -105,14 +105,14 @@ const expandedMapGroup = svg.append("g")
     .style("opacity", 0)
     .style("pointer-events", "none");
 
-// Map box dimensions - BIGGER
-const mapBoxWidth = 800;
-const mapBoxHeight = 480;
+// Map box dimensions - BIGGER to fit everything
+const mapBoxWidth = 860;
+const mapBoxHeight = 580;
 
 // Expanded map background box
 expandedMapGroup.append("rect")
     .attr("x", -mapBoxWidth/2)
-    .attr("y", -mapBoxHeight/2 - 40)
+    .attr("y", -mapBoxHeight/2)
     .attr("width", mapBoxWidth)
     .attr("height", mapBoxHeight)
     .attr("rx", 15)
@@ -123,7 +123,7 @@ expandedMapGroup.append("rect")
 // Expanded map title
 expandedMapGroup.append("text")
     .attr("x", 0)
-    .attr("y", -mapBoxHeight/2 - 10)
+    .attr("y", -mapBoxHeight/2 + 35)
     .attr("text-anchor", "middle")
     .attr("fill", "#ffa500")
     .attr("font-size", "28px")
@@ -133,7 +133,7 @@ expandedMapGroup.append("text")
 // Close button for expanded map
 const closeButton = expandedMapGroup.append("g")
     .attr("class", "close-button")
-    .attr("transform", `translate(${mapBoxWidth/2 - 30}, ${-mapBoxHeight/2 - 10})`)
+    .attr("transform", `translate(${mapBoxWidth/2 - 35}, ${-mapBoxHeight/2 + 35})`)
     .style("cursor", "pointer");
 
 closeButton.append("circle")
@@ -150,74 +150,21 @@ closeButton.append("text")
     .attr("font-weight", "bold")
     .text("×");
 
-// Group for the actual map - adjusted position
+// Group for the actual map - positioned higher to make room for info panel below
 const expandedMapContent = expandedMapGroup.append("g")
     .attr("class", "expanded-map-content")
-    .attr("transform", "translate(0, -20)");
+    .attr("transform", "translate(0, -50)");
 
 // Group for region markers
-const regionMarkers = expandedMapGroup.append("g").attr("class", "region-markers");
+const regionMarkers = expandedMapGroup.append("g")
+    .attr("class", "region-markers")
+    .attr("transform", "translate(0, -50)");
 
-// Legend box dimensions
-const legendBoxWidth = mapBoxWidth;
-const legendBoxHeight = 60;
-const legendBoxY = mapBoxHeight/2 - 30;
-
-// Legend box background - SEPARATE BOX BELOW MAP
-const legendBox = expandedMapGroup.append("g")
-    .attr("class", "legend-box")
-    .attr("transform", `translate(0, ${legendBoxY})`);
-
-legendBox.append("rect")
-    .attr("x", -legendBoxWidth/2)
-    .attr("y", 0)
-    .attr("width", legendBoxWidth)
-    .attr("height", legendBoxHeight)
-    .attr("rx", 10)
-    .attr("fill", "rgba(10, 20, 40, 0.95)")
-    .attr("stroke", "rgba(255, 150, 100, 0.6)")
-    .attr("stroke-width", 2);
-
-// Legend content
-const legendContent = legendBox.append("g")
-    .attr("transform", `translate(0, ${legendBoxHeight/2})`);
-
-const legendItems = [
-    { color: "rgba(255, 107, 53, 0.7)", label: "Pacific Coast" },
-    { color: "rgba(100, 200, 255, 0.7)", label: "Atlantic Coast" },
-    { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" }
-];
-
-const legendSpacing = 200;
-const legendStartX = -legendSpacing;
-
-legendItems.forEach((item, i) => {
-    const g = legendContent.append("g")
-        .attr("transform", `translate(${legendStartX + i * legendSpacing}, 0)`);
-    
-    g.append("rect")
-        .attr("x", -10)
-        .attr("y", -10)
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("rx", 4)
-        .attr("fill", item.color)
-        .attr("stroke", "rgba(255, 255, 255, 0.6)")
-        .attr("stroke-width", 1);
-    
-    g.append("text")
-        .attr("x", 18)
-        .attr("y", 5)
-        .attr("fill", "rgba(255, 255, 255, 0.9)")
-        .attr("font-size", "14px")
-        .attr("font-weight", "500")
-        .text(item.label);
-});
-
-// Info panel for region details - positioned above legend
+// Info panel for region details - BELOW the map
+const infoPanelY = mapBoxHeight/2 - 140;
 const infoPanel = expandedMapGroup.append("g")
     .attr("class", "info-panel")
-    .attr("transform", `translate(0, ${legendBoxY - 70})`)
+    .attr("transform", `translate(0, ${infoPanelY})`)
     .style("opacity", 0);
 
 infoPanel.append("rect")
@@ -246,6 +193,64 @@ const infoText = infoPanel.append("text")
     .attr("text-anchor", "middle")
     .attr("fill", "rgba(255, 255, 255, 0.9)")
     .attr("font-size", "13px");
+
+// Legend box dimensions - BELOW info panel
+const legendBoxWidth = mapBoxWidth;
+const legendBoxHeight = 50;
+const legendBoxY = mapBoxHeight/2 - 60;
+
+// Legend box background - SEPARATE BOX BELOW MAP
+const legendBox = expandedMapGroup.append("g")
+    .attr("class", "legend-box")
+    .attr("transform", `translate(0, ${legendBoxY})`);
+
+legendBox.append("rect")
+    .attr("x", -legendBoxWidth/2)
+    .attr("y", 0)
+    .attr("width", legendBoxWidth)
+    .attr("height", legendBoxHeight)
+    .attr("rx", 10)
+    .attr("fill", "rgba(10, 20, 40, 0.95)")
+    .attr("stroke", "rgba(255, 150, 100, 0.6)")
+    .attr("stroke-width", 2);
+
+// Legend content - CENTERED
+const legendContent = legendBox.append("g")
+    .attr("transform", `translate(0, ${legendBoxHeight/2})`);
+
+const legendItems = [
+    { color: "rgba(255, 107, 53, 0.7)", label: "Pacific Coast" },
+    { color: "rgba(100, 200, 255, 0.7)", label: "Atlantic Coast" },
+    { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" }
+];
+
+// Calculate total legend width for centering
+const itemWidth = 160;
+const totalLegendWidth = legendItems.length * itemWidth;
+const legendStartX = -totalLegendWidth/2 + itemWidth/2;
+
+legendItems.forEach((item, i) => {
+    const g = legendContent.append("g")
+        .attr("transform", `translate(${legendStartX + i * itemWidth}, 0)`);
+    
+    g.append("rect")
+        .attr("x", -60)
+        .attr("y", -10)
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("rx", 4)
+        .attr("fill", item.color)
+        .attr("stroke", "rgba(255, 255, 255, 0.6)")
+        .attr("stroke-width", 1);
+    
+    g.append("text")
+        .attr("x", -32)
+        .attr("y", 5)
+        .attr("fill", "rgba(255, 255, 255, 0.9)")
+        .attr("font-size", "14px")
+        .attr("font-weight", "500")
+        .text(item.label);
+});
 
 function showRegionInfo(region) {
     infoTitle.text(region.name + " — Base Temp: " + region.baseTemp + "°C");
