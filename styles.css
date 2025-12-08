@@ -483,7 +483,6 @@ h1 {
     background: linear-gradient(to right, #4a90e2, #f39c12, #e74c3c);
     border-radius: 4px;
     outline: none;
-    -webkit-appearance: none;
 }
 
 #temperature-slider::-webkit-slider-thumb {
