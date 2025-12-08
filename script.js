@@ -719,31 +719,29 @@ function updateVisualization(step) {
         for (let i = 0; i < 10; i++) {
             createBubble();
         }
-    }, 1000); // ✅ faster interval
+    }, 1000);
     }
     if (step === 2) {
         bubbleInterval = setInterval(() => {
         for (let i = 0; i < 10; i++) {
             createBubble();
         }
-    }, 500); // ✅ faster interval
+    }, 500);
     }
-    // Continuous bubbling for 2050
     if (step === 3) {
         bubbleInterval = setInterval(() => {
         for (let i = 0; i < 15; i++) {
             createBubble();
         }
-    }, 200); // ✅ faster interval
+    }, 200);
     }
 
-    // Continuous bubbling for 2050
     if (step === 4) {
         bubbleInterval = setInterval(() => {
         for (let i = 0; i < 20; i++) {
             createBubble();
         }
-    }, 50); // ✅ faster interval
+    }, 50);
     }
 }
 
@@ -873,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Function to show accuracy feedback
+    // Function to show accuracy feedback - NO SCROLLING
     function showAccuracyFeedback(userPrediction) {
         console.log('Showing accuracy feedback for:', userPrediction);
         const actual = ACTUAL_PROJECTION;
@@ -936,13 +934,16 @@ document.addEventListener('DOMContentLoaded', function() {
             accuracyFeedback.textContent = details;
         }
         
-        // Show results section
+        // Show results section WITHOUT scrolling - just display it in place
         if (resultsSection) {
             console.log('Showing results section');
             resultsSection.style.display = 'block';
+            // Add a smooth fade-in effect instead of scrolling
+            resultsSection.style.opacity = '0';
+            resultsSection.style.transition = 'opacity 0.5s ease-in-out';
             setTimeout(() => {
-                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+                resultsSection.style.opacity = '1';
+            }, 50);
         }
     }
     
@@ -980,9 +981,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 feedbackText.textContent = "Moderate increase projected by many climate models";
             }
             
-            // Hide results section
+            // Hide results section with fade out
             if (resultsSection) {
-                resultsSection.style.display = 'none';
+                resultsSection.style.opacity = '0';
+                setTimeout(() => {
+                    resultsSection.style.display = 'none';
+                }, 500);
             }
             
             // Focus back on slider
