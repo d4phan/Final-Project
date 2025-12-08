@@ -459,6 +459,7 @@ h1 {
     padding: 2rem;
     border-radius: 10px;
     border: 1px solid rgba(255, 150, 100, 0.2);
+    display: flex;
 }
 
 .slider-container {
@@ -586,4 +587,18 @@ h1 {
 
 .tick:last-child {
     text-align: right;
+}
+
+.climate-context {
+    display: flex;
+    flex-direction: column; /* stack emojis + text vertically */
+    align-items: center;    /* center horizontally */
+    justify-content: center; /* optional: center vertically if needed */
+    text-align: center;      /* center the text inside each line */
+    gap: 0.5rem;             /* spacing between lines or emojis */
+}
+.submit-btn-wrapper {
+    display: flex;
+    justify-content: center;  /* center horizontally */
+    margin-top: 2rem;         /* spacing from above content */
 }

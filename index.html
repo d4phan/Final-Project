@@ -21,6 +21,7 @@
             <span></span>
         </div>
     </div>
+
     <div id="prediction-section">
     <div class="prediction-container">
         <h2>How Much Do You Think Temperatures Will Rise By 2050?</h2>
@@ -50,16 +51,40 @@
                     <span id="slider-feedback-text">Moderate increase projected by many climate models</span>
                 </div>
             </div>
-            
-            <!-- Submit Button -->
+        </div>
+    
+        
+        <!-- Climate Context -->
+        <div class="climate-context">
+            <h4>Climate Context</h4>
+            <div class="context-grid">
+                <div class="context-card">
+                    <div class="context-icon">🌡️</div>
+                    <h5>Paris Agreement Goal</h5>
+                    <p>Limit warming to well below 2°C, preferably to 1.5°C</p>
+                </div>
+                <div class="context-card">
+                    <div class="context-icon">🌊</div>
+                    <h5>Coastal Impact</h5>
+                    <p>Coastal areas warm faster than global average</p>
+                </div>
+                <div class="context-card">
+                    <div class="context-icon">🔥</div>
+                    <h5>Current Trajectory</h5>
+                    <p>Current policies put us on track for ~3°C warming</p>
+                </div>
+            </div>
+        </div>
+        <!-- Submit Button -->
+         <!-- Should change this button to a save button so that users can compare results at end of page-->
+          <div class="submit-btn-wrapper">
             <button id="submit-prediction" class="submit-btn">
                 Compare with Projection
             </button>
-            
-            
         </div>
-
-    <div id="scrolly-section">
+    </div>
+    </div>
+        <div id="scrolly-section">
         <div id="vis-container">
             <svg id="visualization"></svg>
             <div class="knob-indicator">
@@ -106,32 +131,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    
-        
-        <!-- Climate Context -->
-        <div class="climate-context">
-            <h4>Climate Context</h4>
-            <div class="context-grid">
-                <div class="context-card">
-                    <div class="context-icon">🌡️</div>
-                    <h5>Paris Agreement Goal</h5>
-                    <p>Limit warming to well below 2°C, preferably to 1.5°C</p>
-                </div>
-                <div class="context-card">
-                    <div class="context-icon">🌊</div>
-                    <h5>Coastal Impact</h5>
-                    <p>Coastal areas warm faster than global average</p>
-                </div>
-                <div class="context-card">
-                    <div class="context-icon">🔥</div>
-                    <h5>Current Trajectory</h5>
-                    <p>Current policies put us on track for ~3°C warming</p>
-                </div>
-            </div>
-        </div>
-    </div>
     </div>
     <!-- Results Display -->
             <div id="prediction-results" class="prediction-results" style="display: none;">
