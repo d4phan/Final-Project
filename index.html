@@ -21,6 +21,43 @@
             <span></span>
         </div>
     </div>
+    <div id="prediction-section">
+    <div class="prediction-container">
+        <h2>How Much Do You Think Temperatures Will Rise By 2050?</h2>
+        <p class="prediction-subtitle">Test your climate intuition by predicting the average temperature increase by 2050</p>
+        
+        <div class="prediction-interface">
+            <!-- Temperature Slider -->
+            <div class="prediction-slider-container">
+                <div class="slider-header">
+                    <span class="slider-label">Your Prediction:</span>
+                    <span class="slider-value" id="prediction-value">+2.5°C</span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="temperature-slider" min="0" max="7" step="0.1" value="2.5" class="temperature-slider">
+                    <div class="slider-ticks">
+                        <span class="tick">0°C</span>
+                        <span class="tick">1°C</span>
+                        <span class="tick">2°C</span>
+                        <span class="tick">3°C</span>
+                        <span class="tick">4°C</span>
+                        <span class="tick">5°C</span>
+                        <span class="tick">6°C</span>
+                        <span class="tick">7°C</span>
+                    </div>
+                </div>
+                <div class="slider-feedback">
+                    <span id="slider-feedback-text">Moderate increase projected by many climate models</span>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button id="submit-prediction" class="submit-btn">
+                Compare with Projection
+            </button>
+            
+            
+        </div>
 
     <div id="scrolly-section">
         <div id="vis-container">
@@ -71,42 +108,32 @@
         </div>
     </div>
 
-    <div id="prediction-section">
-    <div class="prediction-container">
-        <h2>How Much Do You Think Temperatures Will Rise By 2050?</h2>
-        <p class="prediction-subtitle">Test your climate intuition by predicting the average temperature increase by 2050</p>
+    
         
-        <div class="prediction-interface">
-            <!-- Temperature Slider -->
-            <div class="prediction-slider-container">
-                <div class="slider-header">
-                    <span class="slider-label">Your Prediction:</span>
-                    <span class="slider-value" id="prediction-value">+2.5°C</span>
+        <!-- Climate Context -->
+        <div class="climate-context">
+            <h4>Climate Context</h4>
+            <div class="context-grid">
+                <div class="context-card">
+                    <div class="context-icon">🌡️</div>
+                    <h5>Paris Agreement Goal</h5>
+                    <p>Limit warming to well below 2°C, preferably to 1.5°C</p>
                 </div>
-                <div class="slider-wrapper">
-                    <input type="range" id="temperature-slider" min="0" max="7" step="0.1" value="2.5" class="temperature-slider">
-                    <div class="slider-ticks">
-                        <span class="tick">0°C</span>
-                        <span class="tick">1°C</span>
-                        <span class="tick">2°C</span>
-                        <span class="tick">3°C</span>
-                        <span class="tick">4°C</span>
-                        <span class="tick">5°C</span>
-                        <span class="tick">6°C</span>
-                        <span class="tick">7°C</span>
-                    </div>
+                <div class="context-card">
+                    <div class="context-icon">🌊</div>
+                    <h5>Coastal Impact</h5>
+                    <p>Coastal areas warm faster than global average</p>
                 </div>
-                <div class="slider-feedback">
-                    <span id="slider-feedback-text">Moderate increase projected by many climate models</span>
+                <div class="context-card">
+                    <div class="context-icon">🔥</div>
+                    <h5>Current Trajectory</h5>
+                    <p>Current policies put us on track for ~3°C warming</p>
                 </div>
             </div>
-            
-            <!-- Submit Button -->
-            <button id="submit-prediction" class="submit-btn">
-                Compare with Projection
-            </button>
-            
-            <!-- Results Display -->
+        </div>
+    </div>
+    </div>
+    <!-- Results Display -->
             <div id="prediction-results" class="prediction-results" style="display: none;">
                 <div class="result-card">
                     <h3>Your Prediction vs Actual Projection</h3>
@@ -177,32 +204,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Climate Context -->
-        <div class="climate-context">
-            <h4>Climate Context</h4>
-            <div class="context-grid">
-                <div class="context-card">
-                    <div class="context-icon">🌡️</div>
-                    <h5>Paris Agreement Goal</h5>
-                    <p>Limit warming to well below 2°C, preferably to 1.5°C</p>
-                </div>
-                <div class="context-card">
-                    <div class="context-icon">🌊</div>
-                    <h5>Coastal Impact</h5>
-                    <p>Coastal areas warm faster than global average</p>
-                </div>
-                <div class="context-card">
-                    <div class="context-icon">🔥</div>
-                    <h5>Current Trajectory</h5>
-                    <p>Current policies put us on track for ~3°C warming</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-
+            
     <div id="footer">
         <div id="footer-content">
             <h2>🔥 By 2050: A Burning Reality 🔥</h2>
