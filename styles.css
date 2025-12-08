@@ -485,7 +485,6 @@ h1 {
     background: #444;
     border-radius: 3px;
     outline: none;
-    -webkit-appearance: none;
 }
 
 #temperature-slider::-webkit-slider-thumb {
