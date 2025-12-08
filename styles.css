@@ -430,13 +430,16 @@ h1 {
     background: #16213e;
     padding: 3rem 2rem;
     border-top: 1px solid rgba(255, 150, 100, 0.3);
+    width: 100%; /* ensure full width */
 }
 
 .prediction-container {
-    max-width: 600px;
     margin: 0 auto;
-    text-align: center;
+    padding: 2rem;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
 }
+
 
 #prediction-section h2 {
     font-family: 'Playfair Display', serif;
