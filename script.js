@@ -1074,37 +1074,97 @@ topojsonScript.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3';
 topojsonScript.onload = loadUSMap;
 document.head.appendChild(topojsonScript);
 
-// Pot body
-const pot = potGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", 50)
-    .attr("rx", 150)
-    .attr("ry", 120)
-    .attr("fill", "#333")
-    .attr("stroke", "#666")
-    .attr("stroke-width", 3);
+const defs = svg.append("defs");
 
-// Pot rim
-potGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", -70)
-    .attr("rx", 160)
-    .attr("ry", 20)
-    .attr("fill", "#444")
-    .attr("stroke", "#666")
-    .attr("stroke-width", 3);
+// Dynamic gradient for pot body (blue to red based on temperature)
+const potBodyGradient = defs.append("linearGradient").attr("id", "potBodyGradient").attr("x1", "0%").attr("y1", "0%").attr("x2", "0%").attr("y2", "100%");
+potBodyGradient.append("stop").attr("offset", "0%").attr("stop-color", "#5a9fd4").attr("class", "pot-color-top");
+potBodyGradient.append("stop").attr("offset", "50%").attr("stop-color", "#4a8bc4").attr("class", "pot-color-mid");
+potBodyGradient.append("stop").attr("offset", "100%").attr("stop-color", "#3a7bb4").attr("class", "pot-color-bottom");
 
-// Water/heat level
-const heatLevel = potGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", 40)
-    .attr("rx", 140)
-    .attr("ry", 100)
-    .attr("fill", "#4a90e2")
-    .attr("opacity", 0.6);
+// Glass lid gradient
+const lidGradient = defs.append("radialGradient").attr("id", "lidGradient").attr("cx", "50%").attr("cy", "30%").attr("r", "70%");
+lidGradient.append("stop").attr("offset", "0%").attr("stop-color", "rgba(180, 210, 240, 0.5)");
+lidGradient.append("stop").attr("offset", "50%").attr("stop-color", "rgba(140, 180, 220, 0.3)");
+lidGradient.append("stop").attr("offset", "100%").attr("stop-color", "rgba(100, 150, 200, 0.4)");
 
-// Bubbles
-const bubblesGroup = potGroup.append("g");
+// Heat glow gradient
+const heatGlowGradient = defs.append("radialGradient").attr("id", "heatGlowGradient").attr("cx", "50%").attr("cy", "50%").attr("r", "50%");
+heatGlowGradient.append("stop").attr("offset", "0%").attr("stop-color", "rgba(255, 100, 50, 0.8)");
+heatGlowGradient.append("stop").attr("offset", "100%").attr("stop-color", "rgba(255, 50, 0, 0)");
+
+// === BASE UNIT (Climate Cooker) ===
+potGroup.append("rect").attr("x", -140).attr("y", 75).attr("width", 280).attr("height", 85).attr("rx", 8)
+    .attr("fill", "#1a1a1a").attr("stroke", "#333").attr("stroke-width", 2);
+
+// Control panel
+potGroup.append("rect").attr("x", -50).attr("y", 100).attr("width", 100).attr("height", 45).attr("rx", 5)
+    .attr("fill", "#222").attr("stroke", "#444").attr("stroke-width", 1);
+
+// Temperature dial
+const dialGroup = potGroup.append("g").attr("transform", "translate(-15, 122)");
+dialGroup.append("circle").attr("r", 18).attr("fill", "#333").attr("stroke", "#555").attr("stroke-width", 2);
+dialGroup.append("circle").attr("r", 12).attr("fill", "#222");
+const dialIndicator = dialGroup.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", -10)
+    .attr("stroke", "#ff6b35").attr("stroke-width", 3).attr("stroke-linecap", "round");
+
+// Power light
+const powerLight = potGroup.append("circle").attr("cx", 30).attr("cy", 122).attr("r", 8).attr("fill", "#00ff00");
+
+// Label
+potGroup.append("text").attr("x", 0).attr("y", 152).attr("text-anchor", "middle")
+    .attr("fill", "#555").attr("font-size", "11px").text("CLIMATE COOKER");
+
+// === HEAT GLOW ===
+const heatGlowEllipse = potGroup.append("ellipse").attr("cx", 0).attr("cy", 72).attr("rx", 100).attr("ry", 12)
+    .attr("fill", "url(#heatGlowGradient)").attr("opacity", 0).attr("class", "heat-glow");
+
+// === CERAMIC POT BODY ===
+const potBody = potGroup.append("path")
+    .attr("d", "M -120 75 L -120 -25 Q -120 -65 -80 -65 L 80 -65 Q 120 -65 120 -25 L 120 75 Z")
+    .attr("fill", "url(#potBodyGradient)").attr("stroke", "#2a5a8a").attr("stroke-width", 3);
+
+// Pot highlight
+potGroup.append("path").attr("d", "M -115 70 L -115 -20 Q -115 -55 -85 -60 L -75 -60 Q -105 -55 -105 -20 L -105 65 Z")
+    .attr("fill", "rgba(255,255,255,0.15)");
+
+// Decorative lines
+potGroup.append("line").attr("x1", -115).attr("y1", -15).attr("x2", 115).attr("y2", -15)
+    .attr("stroke", "rgba(255,255,255,0.2)").attr("stroke-width", 2);
+potGroup.append("line").attr("x1", -115).attr("y1", 15).attr("x2", 115).attr("y2", 15)
+    .attr("stroke", "rgba(255,255,255,0.15)").attr("stroke-width", 2);
+
+// === SIDE HANDLES ===
+potGroup.append("path").attr("d", "M -120 -15 Q -160 -15 -160 15 Q -160 45 -120 45")
+    .attr("fill", "none").attr("stroke", "#333").attr("stroke-width", 14).attr("stroke-linecap", "round");
+potGroup.append("path").attr("d", "M -120 -15 Q -155 -15 -155 15 Q -155 45 -120 45")
+    .attr("fill", "none").attr("stroke", "#444").attr("stroke-width", 8).attr("stroke-linecap", "round");
+potGroup.append("path").attr("d", "M 120 -15 Q 160 -15 160 15 Q 160 45 120 45")
+    .attr("fill", "none").attr("stroke", "#333").attr("stroke-width", 14).attr("stroke-linecap", "round");
+potGroup.append("path").attr("d", "M 120 -15 Q 155 -15 155 15 Q 155 45 120 45")
+    .attr("fill", "none").attr("stroke", "#444").attr("stroke-width", 8).attr("stroke-linecap", "round");
+
+// === LID ===
+const lidGroup = potGroup.append("g").attr("class", "lid-group");
+lidGroup.append("ellipse").attr("cx", 0).attr("cy", -65).attr("rx", 125).attr("ry", 10)
+    .attr("fill", "#555").attr("stroke", "#666").attr("stroke-width", 2);
+lidGroup.append("path")
+    .attr("d", "M -120 -68 Q -125 -100 -90 -112 Q 0 -130 90 -112 Q 125 -100 120 -68 Q 100 -65 0 -63 Q -100 -65 -120 -68 Z")
+    .attr("fill", "url(#lidGradient)").attr("stroke", "rgba(150, 180, 200, 0.5)").attr("stroke-width", 2);
+lidGroup.append("path").attr("d", "M -80 -85 Q -40 -105 30 -100 Q 50 -95 40 -88 Q -10 -92 -60 -82 Z")
+    .attr("fill", "rgba(255,255,255,0.3)");
+lidGroup.append("ellipse").attr("cx", 0).attr("cy", -115).attr("rx", 18).attr("ry", 7).attr("fill", "#333").attr("stroke", "#444").attr("stroke-width", 2);
+lidGroup.append("path").attr("d", "M -10 -115 Q 0 -128 10 -115").attr("fill", "none").attr("stroke", "#222").attr("stroke-width", 7).attr("stroke-linecap", "round");
+
+// === BUBBLES & STEAM GROUPS ===
+const bubblesGroup = potGroup.append("g").attr("class", "bubbles-group");
+const steamGroup = potGroup.append("g").attr("class", "steam-group");
+for (let i = 0; i < 8; i++) {
+    steamGroup.append("ellipse").attr("class", "steam-particle")
+        .attr("cx", -40 + Math.random() * 80).attr("cy", -120)
+        .attr("rx", 5 + Math.random() * 8).attr("ry", 4 + Math.random() * 6)
+        .attr("fill", "rgba(255,255,255,0.4)").attr("opacity", 0);
+}
 
 // Region labels feeding into pot
 const regionsGroup = mainGroup.append("g");
@@ -1237,7 +1297,7 @@ function createSplashEffect(x, y, index) {
 // Temperature label
 const tempLabel = potGroup.append("text")
     .attr("x", 0)
-    .attr("y", -100)
+    .attr("y", -145)
     .attr("text-anchor", "middle")
     .attr("fill", "#fff")
     .attr("font-size", "24px")
@@ -1335,70 +1395,87 @@ function pulseMarkers() {
 setTimeout(pulseMarkers, 1000);
 
 let bubbleInterval = null;
+let steamInterval = null;
+let lidShakeInterval = null;
 
 function updateVisualization(step) {
     currentStep = step;
     const projection = projections[step];
     const temp = projection.tempIncrease;
+    const intensity = step / 4;
     
-    // Update heat level color
-    heatLevel
-        .transition()
-        .duration(800)
-        .attr("fill", projection.color);
-
-    // Update temperature label
-    tempLabel.text(`+${temp.toFixed(1)}°C`);
-
-    // Create bubbles based on temperature
-    const numBubbles = Math.floor(temp * 5);
-    
-    bubblesGroup.selectAll("circle").remove();
-    
-    for (let i = 0; i < numBubbles; i++) {
-        bubblesGroup.append("circle")
-            .attr("cx", (Math.random() - 0.5) * 200)
-            .attr("cy", 80)
-            .attr("r", 3 + Math.random() * 5)
-            .attr("fill", "white")
-            .attr("opacity", 0.7)
-            .transition()
-            .duration(1000 + Math.random() * 1000)
-            .attr("cy", -50)
-            .attr("opacity", 0)
-            .remove();
-    }
-
-    // Update knob
-    const knobRotation = (step / 4) * 180;
-    const knobMarker = d3.select(".knob-marker");
-    if (!knobMarker.empty()) {
-        knobMarker.style("transform", `translateX(-50%) rotate(${knobRotation}deg)`);
-    }
-    
-    // Stop previous bubbling
-    if (bubbleInterval) {
-        clearInterval(bubbleInterval);
-        bubbleInterval = null;
-    }
-    
-    // Configure bubbles based on step
-    const bubbleConfigs = [
-        { count: 0, interval: 0 },
-        { count: 10, interval: 1000 },
-        { count: 10, interval: 500 },
-        { count: 15, interval: 200 },
-        { count: 20, interval: 50 }
+    // Color palette: blue to red
+    const potColors = [
+        { top: "#5a9fd4", mid: "#4a8bc4", bottom: "#3a7bb4" },
+        { top: "#6aafb4", mid: "#5a9fa4", bottom: "#4a8f94" },
+        { top: "#d4a55a", mid: "#c4954a", bottom: "#b4853a" },
+        { top: "#d47a5a", mid: "#c46a4a", bottom: "#b45a3a" },
+        { top: "#d45a5a", mid: "#c44a4a", bottom: "#b43a3a" }
     ];
-
-    const config = bubbleConfigs[step];
-    if (config.count > 0) {
-        bubbleInterval = setInterval(() => {
-            for (let i = 0; i < config.count; i++) {
-                createBubble();
-            }
-        }, config.interval);
+    
+    const colors = potColors[step];
+    d3.select(".pot-color-top").transition().duration(800).attr("stop-color", colors.top);
+    d3.select(".pot-color-mid").transition().duration(800).attr("stop-color", colors.mid);
+    d3.select(".pot-color-bottom").transition().duration(800).attr("stop-color", colors.bottom);
+    
+    // Heat glow
+    d3.select(".heat-glow").transition().duration(800).attr("opacity", intensity * 0.8);
+    
+    // Power light
+    const lightColors = ["#00ff00", "#7fff00", "#ffff00", "#ff8800", "#ff0000"];
+    powerLight.transition().duration(400).attr("fill", lightColors[step]);
+    
+    // Dial rotation
+    dialIndicator.transition().duration(600).attr("transform", `rotate(${-90 + step * 45})`);
+    
+    // Temperature label
+    tempLabel.text(`+${temp.toFixed(1)}°C`);
+    
+    // Clear animations
+    if (bubbleInterval) { clearInterval(bubbleInterval); bubbleInterval = null; }
+    if (steamInterval) { clearInterval(steamInterval); steamInterval = null; }
+    if (lidShakeInterval) { clearInterval(lidShakeInterval); lidShakeInterval = null; lidGroup.attr("transform", "translate(0, 0)"); }
+    bubblesGroup.selectAll("*").remove();
+    
+    function createBubble() {
+        bubblesGroup.append("circle").attr("cx", -80 + Math.random() * 160).attr("cy", 50)
+            .attr("r", 2 + Math.random() * 4).attr("fill", "rgba(255, 255, 255, 0.6)")
+            .transition().duration(800 + Math.random() * 400).attr("cy", -55).attr("opacity", 0)
+            .on("end", function() { d3.select(this).remove(); });
     }
+    
+    function animateSteam() {
+        steamGroup.selectAll(".steam-particle").each(function() {
+            const particle = d3.select(this);
+            const startX = -30 + Math.random() * 60;
+            particle.attr("cx", startX).attr("cy", -120).attr("opacity", 0)
+                .transition().delay(Math.random() * 300).duration(1500)
+                .attr("cy", -180 - Math.random() * 40).attr("cx", startX + (Math.random() - 0.5) * 30)
+                .attr("opacity", 0.4 * intensity).transition().duration(400).attr("opacity", 0);
+        });
+    }
+    
+    if (step >= 1) {
+        const bubbleRate = [0, 600, 300, 150, 60][step];
+        const bubblesPerBurst = [0, 2, 4, 8, 12][step];
+        bubbleInterval = setInterval(() => { for (let i = 0; i < bubblesPerBurst; i++) createBubble(); }, bubbleRate);
+    }
+    
+    if (step >= 2) {
+        animateSteam();
+        steamInterval = setInterval(animateSteam, [0, 0, 1500, 1000, 500][step]);
+    }
+    
+    if (step === 4) {
+        lidShakeInterval = setInterval(() => {
+            lidGroup.transition().duration(40)
+                .attr("transform", `translate(${(Math.random() - 0.5) * 4}, ${(Math.random() - 0.5) * 2})`)
+                .transition().duration(40).attr("transform", "translate(0, 0)");
+        }, 120);
+    }
+    
+    const knobMarker = d3.select(".knob-marker");
+    if (!knobMarker.empty()) knobMarker.style("transform", `translateX(-50%) rotate(${(step / 4) * 180}deg)`);
 }
 
 // Scrollama setup
