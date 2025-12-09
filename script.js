@@ -115,6 +115,21 @@ async function loadCoastalData() {
         const response = await fetch('data/coastal_regions_real_data.json');
         const allData = await response.json();
         coastalRegions = allData.map(region => ({ ...region, processedData: processTemperatureData(region) }));
+        
+        // Process each region's temperature data
+        const processedData = allData.map(region => {
+            const processed = processTemperatureData(region);
+            return {
+                ...region,
+                processedData: processed
+            };
+        });
+        
+        coastalRegions = processedData;
+        updateRegionLabels();
+        console.log("Loaded coastal data:", coastalRegions);
+        
+        // Update region markers with real data
         addRegionMarkers();
         return coastalRegions;
     } catch (error) {
@@ -126,6 +141,7 @@ async function loadCoastalData() {
             { name: "Hawaiian Coast", baseTemp: 25, info: "Hawaii coral bleaching.", markerPos: { x: -150, y: 170 } }
         ];
         addRegionMarkers();
+        updateRegionLabels();
         return coastalRegions;
     }
 }
@@ -403,6 +419,131 @@ defaultRegions.forEach(region => {
         .attr("fill", "#fff").attr("font-size", "14px").text(region.name);
 });
 
+// Update region labels when data is loaded
+// Update region labels when data is loaded
+// Update region labels when data is loaded
+function updateRegionLabels() {
+    regionsGroup.selectAll("*").remove();
+    
+    coastalRegions.forEach((region, i) => {
+        const angle = (i * Math.PI / 2.5) - Math.PI / 3;
+        const startDistance = 400;
+        const startX = width/2 + Math.cos(angle) * startDistance;
+        const startY = height/2 + Math.sin(angle) * startDistance - 300; // Start above and outside
+        
+        // Final position INSIDE the pot (much closer to center)
+        const potRadius = 100; // Inside the pot
+        const endX = width/2 + Math.cos(angle) * potRadius;
+        const endY = height/2 + Math.sin(angle) * potRadius * 0.5; // Flatten for pot perspective
+
+        // Create a container group for the label to allow rotation
+        const labelGroup = regionsGroup.append("g")
+            .attr("class", `region-label-group-${i}`)
+            .attr("transform", `translate(${startX}, ${startY})`);
+
+        // Add a glowing background circle
+        labelGroup.append("circle")
+            .attr("class", `region-glow-${i}`)
+            .attr("r", 20)
+            .attr("fill", "rgba(255, 107, 53, 0.4)")
+            .attr("stroke", "rgba(255, 200, 100, 0.6)")
+            .attr("stroke-width", 2)
+            .attr("opacity", 0);
+
+        // Region label with drop animation
+        const label = labelGroup.append("text")
+            .attr("class", `region-label-${i}`)
+            .attr("x", 0)
+            .attr("y", 5)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#fff")
+            .attr("font-size", "13px")
+            .attr("font-weight", "bold")
+            .text(region.name)
+            .style("opacity", 0);
+
+        // Drop animation - ingredients falling INTO the pot
+        labelGroup
+            .transition()
+            .delay(i * 600)
+            .duration(1800)
+            .attr("transform", `translate(${endX}, ${endY})`)
+            .ease(d3.easeBounceOut)
+            .on("start", function() {
+                // Fade in the label as it falls
+                label.transition()
+                    .duration(400)
+                    .style("opacity", 1);
+                    
+                // Show glow during fall
+                d3.select(`.region-glow-${i}`)
+                    .transition()
+                    .duration(400)
+                    .attr("opacity", 0.8);
+            })
+            .on("end", function() {
+                // Create splash effect when hitting the "water"
+                createSplashEffect(endX, endY, i);
+                
+                // Pulse glow on impact
+                d3.select(`.region-glow-${i}`)
+                    .transition()
+                    .duration(300)
+                    .attr("opacity", 1)
+                    .attr("r", 30)
+                    .transition()
+                    .duration(500)
+                    .attr("opacity", 0.6)
+                    .attr("r", 20);
+            });
+    });
+}
+// Create splash effect when labels "drop" into pot
+// Create splash effect when labels "drop" into pot
+function createSplashEffect(x, y, index) {
+    const splashGroup = regionsGroup.append("g")
+        .attr("class", `splash-${index}`)
+        .attr("transform", `translate(${x}, ${y})`);
+    
+    // Create multiple splash particles
+    for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const distance = 20 + Math.random() * 30;
+        
+        splashGroup.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 4 + Math.random() * 3)
+            .attr("fill", "#4a90e2")
+            .attr("opacity", 0.9)
+            .transition()
+            .duration(700)
+            .attr("cx", Math.cos(angle) * distance)
+            .attr("cy", Math.sin(angle) * distance * 0.6)
+            .attr("r", 1)
+            .attr("opacity", 0)
+            .remove();
+    }
+    
+    // Add ripple effect
+    splashGroup.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 10)
+        .attr("fill", "none")
+        .attr("stroke", "#4a90e2")
+        .attr("stroke-width", 3)
+        .attr("opacity", 0.8)
+        .transition()
+        .duration(800)
+        .attr("r", 40)
+        .attr("stroke-width", 1)
+        .attr("opacity", 0)
+        .remove();
+    
+    // Remove splash group after animation
+    setTimeout(() => splashGroup.remove(), 900);
+}
 // Temperature label
 const tempLabel = potGroup.append("text").attr("x", 0).attr("y", -145).attr("text-anchor", "middle")
     .attr("fill", "#fff").attr("font-size", "32px").attr("font-weight", "bold")

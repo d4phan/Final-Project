@@ -802,3 +802,117 @@ h1 {
 .hidden {
     display: none;
 }
+
+/* ==============================================
+   RESULTS SECTION STYLES
+   ============================================== */
+
+#results-section {
+    background: #16213e;
+    padding: 3rem 2rem;
+    border-top: 1px solid rgba(255, 150, 100, 0.3);
+    width: 100%;
+}
+
+.results-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    min-height: 500px;
+}
+
+/* Results placeholder (shown when no prediction made yet) */
+.results-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.results-placeholder h3 {
+    font-family: 'Playfair Display', serif;
+    color: #ffa500;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.results-placeholder p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    margin-top: 1rem;
+    opacity: 0.6;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Make sure results section displays properly */
+.prediction-results {
+    width: 100%;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Adjust for better mobile responsiveness */
+@media (max-width: 768px) {
+    #prediction-section,
+    #results-section {
+        padding: 2rem 1rem;
+    }
+    
+    .prediction-container,
+    .results-container {
+        padding: 1.5rem;
+    }
+    
+    .comparison-container {
+        gap: 1rem;
+    }
+    
+    .prediction-column {
+        min-width: 140px;
+    }
+    
+    .temperature-display {
+        font-size: 2rem;
+    }
+}
+
+/* Fix for the scrolly section height */
+#scrolly-section {
+    position: relative;
+    min-height: 500vh;
+    background: linear-gradient(to bottom, #16213e 0%, #0f3460 100%);
+    width: 100%;
+}
+
+/* Ensure prediction section is full width */
+#prediction-section {
+    width: 100%;
+}
+
+/* Fix for sticky visualization */
+#vis-container {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to bottom, #16213e 0%, #0f3460 100%);
+    overflow: hidden;
+}

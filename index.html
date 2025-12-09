@@ -22,6 +22,7 @@
         </div>
     </div>
 
+    <!-- PREDICTION SECTION (GUESSING GAME) -->
     <div id="prediction-section">
         <div class="prediction-container">
             <h2>How Much Do You Think Temperatures Will Rise By 2100?</h2>
@@ -78,11 +79,75 @@
             <!-- Submit Button -->
             <div class="submit-btn-wrapper">
                 <button id="submit-prediction" class="submit-btn">
-                    Compare with Projection
+                    Submit Your Prediction
                 </button>
             </div>
 
-            <!-- Results Display - NOW INSIDE THE PREDICTION SECTION -->
+                        <div id="results-placeholder" class="results-placeholder">
+                <div class="placeholder-content">
+                    <h3>Scroll through the visualization below</h3>
+                    <p>The answer to your temperature prediction will be at the end to see how it compares to the actual projections for 2100.</p>
+                    <div class="placeholder-icon">📊</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- SCROLLY SECTION -->
+    <div id="scrolly-section">
+        <div id="vis-container">
+            <svg id="visualization"></svg>
+            <div class="knob-indicator">
+                <div class="knob">
+                    <div class="knob-marker"></div>
+                </div>
+                <div class="knob-label">Temperature</div>
+            </div>
+        </div>
+
+        <div id="steps">
+            <div class="step" data-step="0">
+                <div class="step-content">
+                    <h2>Present Day (2024)</h2>
+                    <p>Coastal regions maintain moderate temperatures with seasonal variation. Our "crockpot" of coastal zones begins at baseline temperatures.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="1">
+                <div class="step-content">
+                    <h2>2040 Projection</h2>
+                    <p>The Pacific Coast begins to warm noticeably, with average temperatures rising 0.7°C above baseline. The heat is slowly building.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="2">
+                <div class="step-content">
+                    <h2>2060 Projection</h2>
+                    <p>Atlantic and Gulf Coast regions experience accelerating warming. Temperature increases reach 1.8°C above baseline as the climate shifts.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="3">
+                <div class="step-content">
+                    <h2>2080 Projection</h2>
+                    <p>Mediterranean-climate zones experience severe "dry heat" episodes. The crockpot is now simmering at 3.1°C above baseline.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="4">
+                <div class="step-content">
+                    <h2>2100 Projection</h2>
+                    <p>All temperate coastal zones reach critical warming thresholds. Average temperatures are 4.5°C above 2024 baseline—our crockpot is boiling.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS SECTION (NOW AFTER SCROLLY) -->
+    <div id="results-section">
+        <div class="results-container">
             <div id="prediction-results" class="prediction-results" style="display: none;">
                 <div class="result-card">
                     <h3>Your Prediction vs Actual Projection</h3>
@@ -151,55 +216,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="scrolly-section">
-        <div id="vis-container">
-            <svg id="visualization"></svg>
-            <div class="knob-indicator">
-                <div class="knob">
-                    <div class="knob-marker"></div>
-                </div>
-                <div class="knob-label">Temperature</div>
-            </div>
-        </div>
-
-        <div id="steps">
-            <div class="step" data-step="0">
-                <div class="step-content">
-                    <h2>Present Day (2024)</h2>
-                    <p>Coastal regions maintain moderate temperatures with seasonal variation. Our "crockpot" of coastal zones begins at baseline temperatures.</p>
-                </div>
-            </div>
-
-            <div class="step" data-step="1">
-                <div class="step-content">
-                    <h2>2040 Projection</h2>
-                    <p>The Pacific Coast begins to warm noticeably, with average temperatures rising 0.7°C above baseline. The heat is slowly building.</p>
-                </div>
-            </div>
-
-            <div class="step" data-step="2">
-                <div class="step-content">
-                    <h2>2060 Projection</h2>
-                    <p>Atlantic and Gulf Coast regions experience accelerating warming. Temperature increases reach 1.8°C above baseline as the climate shifts.</p>
-                </div>
-            </div>
-
-            <div class="step" data-step="3">
-                <div class="step-content">
-                    <h2>2080 Projection</h2>
-                    <p>Mediterranean-climate zones experience severe "dry heat" episodes. The crockpot is now simmering at 3.1°C above baseline.</p>
-                </div>
-            </div>
-
-            <div class="step" data-step="4">
-                <div class="step-content">
-                    <h2>2100 Projection</h2>
-                    <p>All temperate coastal zones reach critical warming thresholds. Average temperatures are 4.5°C above 2024 baseline—our crockpot is boiling.</p>
-                </div>
-            </div>
+            
         </div>
     </div>
 
