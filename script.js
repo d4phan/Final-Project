@@ -1111,28 +1111,20 @@ const regionsGroup = mainGroup.append("g");
 
 // Update region labels when data is loaded
 // Update region labels when data is loaded
+// Update region labels when data is loaded
 function updateRegionLabels() {
     regionsGroup.selectAll("*").remove();
     
     coastalRegions.forEach((region, i) => {
-        const angle = (i * Math.PI / 2) - Math.PI / 4;
-        const distance = 250;
-        const startX = width/2 + Math.cos(angle) * distance;
-        const startY = -100; // Start well above screen
-        const endX = width/2 + Math.cos(angle) * distance;
-        const endY = height/2 + Math.sin(angle) * distance;
-
-        // Arrow to pot (will be drawn after labels drop)
-        const arrow = regionsGroup.append("line")
-            .attr("class", `arrow-${i}`)
-            .attr("x1", region.name === "Hawaiian Coast" ? endX + 100 : endX)
-            .attr("y1", region.name === "Hawaiian Coast" ? endY + 100 : endY)
-            .attr("x2", width/2 + Math.cos(angle) * 160)
-            .attr("y2", height/2 + Math.sin(angle) * 80)
-            .attr("stroke", "#ff6b35")
-            .attr("stroke-width", 2)
-            .attr("stroke-dasharray", "5,5")
-            .attr("opacity", 0);
+        const angle = (i * Math.PI / 2.5) - Math.PI / 3;
+        const startDistance = 400;
+        const startX = width/2 + Math.cos(angle) * startDistance;
+        const startY = height/2 + Math.sin(angle) * startDistance - 300; // Start above and outside
+        
+        // Final position INSIDE the pot (much closer to center)
+        const potRadius = 100; // Inside the pot
+        const endX = width/2 + Math.cos(angle) * potRadius;
+        const endY = height/2 + Math.sin(angle) * potRadius * 0.5; // Flatten for pot perspective
 
         // Create a container group for the label to allow rotation
         const labelGroup = regionsGroup.append("g")
@@ -1142,8 +1134,10 @@ function updateRegionLabels() {
         // Add a glowing background circle
         labelGroup.append("circle")
             .attr("class", `region-glow-${i}`)
-            .attr("r", 25)
-            .attr("fill", "rgba(255, 107, 53, 0.3)")
+            .attr("r", 20)
+            .attr("fill", "rgba(255, 107, 53, 0.4)")
+            .attr("stroke", "rgba(255, 200, 100, 0.6)")
+            .attr("stroke-width", 2)
             .attr("opacity", 0);
 
         // Region label with drop animation
@@ -1153,44 +1147,48 @@ function updateRegionLabels() {
             .attr("y", 5)
             .attr("text-anchor", "middle")
             .attr("fill", "#fff")
-            .attr("font-size", "14px")
+            .attr("font-size", "13px")
             .attr("font-weight", "bold")
             .text(region.name)
             .style("opacity", 0);
 
-        // Drop animation with dramatic bounce and splash effect
+        // Drop animation - ingredients falling INTO the pot
         labelGroup
             .transition()
-            .delay(i * 500)
-            .duration(1500)
-            .attr("transform", `translate(${region.name === "Hawaiian Coast" ? endX + 100 : endX}, ${region.name === "Hawaiian Coast" ? endY + 100 : endY})`)
+            .delay(i * 600)
+            .duration(1800)
+            .attr("transform", `translate(${endX}, ${endY})`)
             .ease(d3.easeBounceOut)
             .on("start", function() {
-                // Fade in the label
+                // Fade in the label as it falls
                 label.transition()
-                    .duration(300)
-                    .style("opacity", 1);
-            })
-            .on("end", function() {
-                // Show arrow after label drops
-                arrow.transition()
                     .duration(400)
-                    .attr("opacity", 0.6);
-                
-                // Create splash effect
-                createSplashEffect(region.name === "Hawaiian Coast" ? endX + 100 : endX, region.name === "Hawaiian Coast" ? endY + 100 : endY, i);
-                
-                // Glow effect
+                    .style("opacity", 1);
+                    
+                // Show glow during fall
                 d3.select(`.region-glow-${i}`)
                     .transition()
-                    .duration(500)
+                    .duration(400)
+                    .attr("opacity", 0.8);
+            })
+            .on("end", function() {
+                // Create splash effect when hitting the "water"
+                createSplashEffect(endX, endY, i);
+                
+                // Pulse glow on impact
+                d3.select(`.region-glow-${i}`)
+                    .transition()
+                    .duration(300)
                     .attr("opacity", 1)
+                    .attr("r", 30)
                     .transition()
                     .duration(500)
-                    .attr("opacity", 0);
+                    .attr("opacity", 0.6)
+                    .attr("r", 20);
             });
     });
 }
+// Create splash effect when labels "drop" into pot
 // Create splash effect when labels "drop" into pot
 function createSplashEffect(x, y, index) {
     const splashGroup = regionsGroup.append("g")
@@ -1198,27 +1196,43 @@ function createSplashEffect(x, y, index) {
         .attr("transform", `translate(${x}, ${y})`);
     
     // Create multiple splash particles
-    for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const distance = 30 + Math.random() * 20;
+    for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const distance = 20 + Math.random() * 30;
         
         splashGroup.append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
-            .attr("r", 3)
-            .attr("fill", "#ff6b35")
-            .attr("opacity", 0.8)
+            .attr("r", 4 + Math.random() * 3)
+            .attr("fill", "#4a90e2")
+            .attr("opacity", 0.9)
             .transition()
-            .duration(600)
+            .duration(700)
             .attr("cx", Math.cos(angle) * distance)
-            .attr("cy", Math.sin(angle) * distance)
+            .attr("cy", Math.sin(angle) * distance * 0.6)
             .attr("r", 1)
             .attr("opacity", 0)
             .remove();
     }
     
+    // Add ripple effect
+    splashGroup.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 10)
+        .attr("fill", "none")
+        .attr("stroke", "#4a90e2")
+        .attr("stroke-width", 3)
+        .attr("opacity", 0.8)
+        .transition()
+        .duration(800)
+        .attr("r", 40)
+        .attr("stroke-width", 1)
+        .attr("opacity", 0)
+        .remove();
+    
     // Remove splash group after animation
-    setTimeout(() => splashGroup.remove(), 700);
+    setTimeout(() => splashGroup.remove(), 900);
 }
 // Temperature label
 const tempLabel = potGroup.append("text")
