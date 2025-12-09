@@ -281,6 +281,7 @@ async function loadCoastalData() {
         });
         
         coastalRegions = processedData;
+        updateRegionLabels();
         console.log("Loaded coastal data:", coastalRegions);
         
         // Update region markers with real data
@@ -329,6 +330,7 @@ async function loadCoastalData() {
             }
         ];
         addRegionMarkers();
+        updateRegionLabels();
         return coastalRegions;
     }
 }
@@ -1108,37 +1110,116 @@ const bubblesGroup = potGroup.append("g");
 const regionsGroup = mainGroup.append("g");
 
 // Update region labels when data is loaded
+// Update region labels when data is loaded
 function updateRegionLabels() {
     regionsGroup.selectAll("*").remove();
     
     coastalRegions.forEach((region, i) => {
         const angle = (i * Math.PI / 2) - Math.PI / 4;
         const distance = 250;
-        const x = width/2 + Math.cos(angle) * distance;
-        const y = height/2 + Math.sin(angle) * distance;
+        const startX = width/2 + Math.cos(angle) * distance;
+        const startY = -100; // Start well above screen
+        const endX = width/2 + Math.cos(angle) * distance;
+        const endY = height/2 + Math.sin(angle) * distance;
 
-        // Arrow to pot
-        regionsGroup.append("line")
-            .attr("x1", region.name === "Hawaiian Coast" ? x + 100 : x)
-            .attr("y1", region.name === "Hawaiian Coast" ? y + 100 : y)
+        // Arrow to pot (will be drawn after labels drop)
+        const arrow = regionsGroup.append("line")
+            .attr("class", `arrow-${i}`)
+            .attr("x1", region.name === "Hawaiian Coast" ? endX + 100 : endX)
+            .attr("y1", region.name === "Hawaiian Coast" ? endY + 100 : endY)
             .attr("x2", width/2 + Math.cos(angle) * 160)
             .attr("y2", height/2 + Math.sin(angle) * 80)
-            .attr("stroke", "#666")
+            .attr("stroke", "#ff6b35")
             .attr("stroke-width", 2)
             .attr("stroke-dasharray", "5,5")
-            .attr("opacity", 0.5);
+            .attr("opacity", 0);
 
-        // Region label
-        regionsGroup.append("text")
-            .attr("x", region.name === "Hawaiian Coast" ? x + 100 : x)
-            .attr("y", region.name === "Hawaiian Coast" ? y + 100 : y)
+        // Create a container group for the label to allow rotation
+        const labelGroup = regionsGroup.append("g")
+            .attr("class", `region-label-group-${i}`)
+            .attr("transform", `translate(${startX}, ${startY})`);
+
+        // Add a glowing background circle
+        labelGroup.append("circle")
+            .attr("class", `region-glow-${i}`)
+            .attr("r", 25)
+            .attr("fill", "rgba(255, 107, 53, 0.3)")
+            .attr("opacity", 0);
+
+        // Region label with drop animation
+        const label = labelGroup.append("text")
+            .attr("class", `region-label-${i}`)
+            .attr("x", 0)
+            .attr("y", 5)
             .attr("text-anchor", "middle")
             .attr("fill", "#fff")
             .attr("font-size", "14px")
-            .text(region.name);
+            .attr("font-weight", "bold")
+            .text(region.name)
+            .style("opacity", 0);
+
+        // Drop animation with dramatic bounce and splash effect
+        labelGroup
+            .transition()
+            .delay(i * 500)
+            .duration(1500)
+            .attr("transform", `translate(${region.name === "Hawaiian Coast" ? endX + 100 : endX}, ${region.name === "Hawaiian Coast" ? endY + 100 : endY})`)
+            .ease(d3.easeBounceOut)
+            .on("start", function() {
+                // Fade in the label
+                label.transition()
+                    .duration(300)
+                    .style("opacity", 1);
+            })
+            .on("end", function() {
+                // Show arrow after label drops
+                arrow.transition()
+                    .duration(400)
+                    .attr("opacity", 0.6);
+                
+                // Create splash effect
+                createSplashEffect(region.name === "Hawaiian Coast" ? endX + 100 : endX, region.name === "Hawaiian Coast" ? endY + 100 : endY, i);
+                
+                // Glow effect
+                d3.select(`.region-glow-${i}`)
+                    .transition()
+                    .duration(500)
+                    .attr("opacity", 1)
+                    .transition()
+                    .duration(500)
+                    .attr("opacity", 0);
+            });
     });
 }
-
+// Create splash effect when labels "drop" into pot
+function createSplashEffect(x, y, index) {
+    const splashGroup = regionsGroup.append("g")
+        .attr("class", `splash-${index}`)
+        .attr("transform", `translate(${x}, ${y})`);
+    
+    // Create multiple splash particles
+    for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const distance = 30 + Math.random() * 20;
+        
+        splashGroup.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 3)
+            .attr("fill", "#ff6b35")
+            .attr("opacity", 0.8)
+            .transition()
+            .duration(600)
+            .attr("cx", Math.cos(angle) * distance)
+            .attr("cy", Math.sin(angle) * distance)
+            .attr("r", 1)
+            .attr("opacity", 0)
+            .remove();
+    }
+    
+    // Remove splash group after animation
+    setTimeout(() => splashGroup.remove(), 700);
+}
 // Temperature label
 const tempLabel = potGroup.append("text")
     .attr("x", 0)
