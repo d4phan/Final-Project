@@ -1109,9 +1109,11 @@ const bubblesGroup = potGroup.append("g");
 // Region labels feeding into pot
 const regionsGroup = mainGroup.append("g");
 
-// Update region labels when data is loaded
-// Update region labels when data is loaded
-// Update region labels when data is loaded
+// State for stirring animation
+let stirringInterval = null;
+let currentRotation = 0;
+
+// Update region labels when data is loadeds
 function updateRegionLabels() {
     regionsGroup.selectAll("*").remove();
     
@@ -1188,7 +1190,6 @@ function updateRegionLabels() {
             });
     });
 }
-// Create splash effect when labels "drop" into pot
 // Create splash effect when labels "drop" into pot
 function createSplashEffect(x, y, index) {
     const splashGroup = regionsGroup.append("g")
