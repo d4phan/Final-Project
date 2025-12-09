@@ -42,7 +42,7 @@ const coastalRegions = [
         markerPos: { x: -270, y: 40 }
     },
     {
-        name: "Hawaii Coast",
+        name: "Hawaiian Coast",
         baseTemp: 25,
         info: "Hawaii's coastal regions are vulnerable to sea level rise and coral bleaching due to rising ocean temperatures, impacting tourism and local ecosystems.",
         states: ["Hawaii"],
@@ -198,6 +198,7 @@ const legendItems = [
     { color: "rgba(255, 107, 53, 0.7)", label: "Pacific Coast" },
     { color: "rgba(100, 200, 255, 0.7)", label: "Atlantic Coast" },
     { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" },
+    {color: "rgba(78, 175, 88, 0.82)", label: "Hawaiian Coast" },
     { color: "rgba(100, 150, 200, 0.4)", label: "Other States" }
 ];
 
