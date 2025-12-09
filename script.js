@@ -11,37 +11,8 @@ for (let i = 0; i < 15; i++) {
     header.appendChild(ember);
 }
 
-// Coastal regions data
-const coastalRegions = [
-    { 
-        name: "Pacific Coast", 
-        baseTemp: 18,
-        info: "The Pacific Coast stretches from Alaska to California, experiencing significant warming trends. Rising ocean temperatures are affecting marine ecosystems and coastal communities.",
-        states: ["California", "Oregon", "Washington"],
-        markerPos: { x: -280, y: -20 }
-    },
-    { 
-        name: "Atlantic Coast", 
-        baseTemp: 16,
-        info: "The Atlantic Coast from Maine to Florida faces increasing hurricane intensity and sea level rise. Coastal erosion threatens infrastructure and habitats.",
-        states: ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"],
-        markerPos: { x: 270, y: -60 }
-    },
-    { 
-        name: "Gulf Coast", 
-        baseTemp: 22,
-        info: "The Gulf Coast experiences some of the fastest warming rates. Wetland loss, intensified storms, and heat waves pose major challenges to this region.",
-        states: ["Texas", "Louisiana", "Mississippi", "Alabama", "Florida"],
-        markerPos: { x: 100, y: 90 }
-    },
-    { 
-        name: "Mediterranean Climate", 
-        baseTemp: 19,
-        info: "Mediterranean climate zones in California are shifting toward more extreme dry heat conditions, increasing wildfire risk and water scarcity.",
-        states: ["California"],
-        markerPos: { x: -270, y: 40 }
-    }
-];
+// Coastal regions data (will be replaced with real data)
+let coastalRegions = [];
 
 const projections = [
     { year: 2024, tempIncrease: 0, color: "#4a90e2" },
@@ -52,14 +23,21 @@ const projections = [
 ];
 
 const svg = d3.select("#visualization");
-const width = window.innerWidth;
-const height = window.innerHeight;
-svg.attr("width", width).attr("height", height);
+let width = window.innerWidth;
+let height = window.innerHeight;
+svg.attr("width", width * 1.5).attr("height", height);
+let minimapCollapsedX = width - 180;
+let minimapCollapsedY = height - 160;
+
+let minimapExpandedX = width / 2 + 250;
+let minimapExpandedY = height / 2 - 60;
 
 // State management
 let isMapExpanded = false;
 let currentStep = 0;
 let usMapData = null;
+let processedRegionData = new Map(); // Store processed temperature data
+let activeChart = null; // Track active chart
 
 // Create main groups
 const mainGroup = svg.append("g").attr("class", "main-group");
@@ -70,8 +48,14 @@ const potGroup = mainGroup.append("g")
 // Create minimap group
 const minimapGroup = svg.append("g")
     .attr("class", "minimap-group")
-    .attr("transform", `translate(${width - 180}, ${height - 160})`)
     .style("cursor", "pointer");
+
+function positionMinimap(x, y, duration = 0) {
+    minimapGroup.transition()
+        .duration(duration)
+        .attr("transform", `translate(${x}, ${y})`);
+}
+positionMinimap(minimapCollapsedX, minimapCollapsedY);
 
 // Minimap background
 minimapGroup.append("rect")
@@ -98,17 +82,14 @@ const minimapContent = minimapGroup.append("g")
     .attr("class", "minimap-content")
     .attr("transform", "translate(5, 5)");
 
-// SHIFT everything to the right - offset from center
-const rightShift = 120;
-
-// Create expanded map group (initially hidden) - SHIFTED RIGHT
+// Create expanded map group (initially hidden)
 const expandedMapGroup = svg.append("g")
     .attr("class", "expanded-map-group")
-    .attr("transform", `translate(${width/2 + rightShift}, ${height/2})`)
+    .attr("transform", `translate(${width * 0.65}, ${height / 2}) scale(0.75)`)
     .style("opacity", 0)
     .style("pointer-events", "none");
 
-// Layout dimensions - BIGGER map box
+// Layout dimensions
 const mapBoxWidth = 820;
 const mapBoxHeight = 520;
 const legendBoxWidth = 180;
@@ -121,7 +102,7 @@ const gap = 15;
 const totalWidth = mapBoxWidth + gap + legendBoxWidth;
 const offsetX = -totalWidth / 2;
 
-// Map box background - BIGGER
+// Map box background
 expandedMapGroup.append("rect")
     .attr("x", offsetX)
     .attr("y", -mapBoxHeight/2 - 40)
@@ -140,7 +121,7 @@ expandedMapGroup.append("text")
     .attr("fill", "#ffa500")
     .attr("font-size", "26px")
     .attr("font-family", "'Playfair Display', serif")
-    .text("Coastal Regions at Risk");
+    .text("Coastal Regions at Risk in the U.S.A");
 
 // Close button
 const closeButton = expandedMapGroup.append("g")
@@ -160,9 +141,9 @@ closeButton.append("text")
     .attr("fill", "#ff6b6b")
     .attr("font-size", "20px")
     .attr("font-weight", "bold")
-    .text("×");
+    .text("x");
 
-// Legend box - TO THE RIGHT of the map
+// Legend box
 const legendBox = expandedMapGroup.append("g")
     .attr("class", "legend-box")
     .attr("transform", `translate(${offsetX + mapBoxWidth + gap}, ${-mapBoxHeight/2 - 40})`);
@@ -185,11 +166,12 @@ legendBox.append("text")
     .attr("font-weight", "bold")
     .text("Legend");
 
-// Legend items - VERTICAL layout
+// Legend items
 const legendItems = [
     { color: "rgba(255, 107, 53, 0.7)", label: "Pacific Coast" },
     { color: "rgba(100, 200, 255, 0.7)", label: "Atlantic Coast" },
     { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" },
+    { color: "rgba(78, 175, 88, 0.82)", label: "Hawaiian Coast" },
     { color: "rgba(100, 150, 200, 0.4)", label: "Other States" }
 ];
 
@@ -279,161 +261,540 @@ const infoText = infoPanel.append("text")
     .attr("fill", "rgba(255, 255, 255, 0.9)")
     .attr("font-size", "14px");
 
-function showRegionInfo(region) {
-    infoTitle.text(region.name + " — Base Temp: " + region.baseTemp + "°C");
-    
-    // Word wrap the info text
-    const words = region.info.split(' ');
-    let line1 = '';
-    let line2 = '';
-    let currentLine = 1;
-    
-    words.forEach(word => {
-        if (currentLine === 1 && line1.length + word.length < 110) {
-            line1 += (line1 ? ' ' : '') + word;
-        } else {
-            currentLine = 2;
-            line2 += (line2 ? ' ' : '') + word;
-        }
-    });
-    
-    infoText.selectAll("tspan").remove();
-    infoText.append("tspan").attr("x", 0).attr("dy", 0).text(line1);
-    if (line2) {
-        infoText.append("tspan").attr("x", 0).attr("dy", "1.3em").text(line2);
-    }
-    
-    infoPanel.transition()
-        .duration(400)
-        .style("opacity", 1);
-}
+// ==============================================
+// NEW: TEMPERATURE TREND CHART FUNCTIONS
+// ==============================================
 
-// Load and render the US map
-async function loadUSMap() {
+// Load and process real coastal data
+async function loadCoastalData() {
     try {
-        // Load TopoJSON data for US states
-        const response = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json');
-        const us = await response.json();
+        const response = await fetch('data/coastal_regions_real_data.json');
+        const allData = await response.json();
         
-        usMapData = us;
+        // Process each region's temperature data
+        const processedData = allData.map(region => {
+            const processed = processTemperatureData(region);
+            return {
+                ...region,
+                processedData: processed
+            };
+        });
         
-        // Convert TopoJSON to GeoJSON
-        const states = topojson.feature(us, us.objects.states);
-        const statesOutline = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
-        const nationOutline = topojson.mesh(us, us.objects.states, (a, b) => a === b);
+        coastalRegions = processedData;
+        console.log("Loaded coastal data:", coastalRegions);
         
-        // Create projection for expanded map
-        const projection = d3.geoAlbersUsa()
-            .scale(900)
-            .translate([0, 0]);
-        
-        const path = d3.geoPath().projection(projection);
-        
-        // Create projection for minimap
-        const minimapProjection = d3.geoAlbersUsa()
-            .scale(150)
-            .translate([70, 50]);
-        
-        const minimapPath = d3.geoPath().projection(minimapProjection);
-        
-        // Define coastal states for highlighting
-        const pacificStates = ["California", "Oregon", "Washington"];
-        const atlanticStates = ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"];
-        const gulfStates = ["Texas", "Louisiana", "Mississippi", "Alabama"];
-        
-        // State names lookup (FIPS codes)
-        const stateNames = {
-            "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas",
-            "06": "California", "08": "Colorado", "09": "Connecticut", "10": "Delaware",
-            "11": "District of Columbia", "12": "Florida", "13": "Georgia", "15": "Hawaii",
-            "16": "Idaho", "17": "Illinois", "18": "Indiana", "19": "Iowa",
-            "20": "Kansas", "21": "Kentucky", "22": "Louisiana", "23": "Maine",
-            "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota",
-            "28": "Mississippi", "29": "Missouri", "30": "Montana", "31": "Nebraska",
-            "32": "Nevada", "33": "New Hampshire", "34": "New Jersey", "35": "New Mexico",
-            "36": "New York", "37": "North Carolina", "38": "North Dakota", "39": "Ohio",
-            "40": "Oklahoma", "41": "Oregon", "42": "Pennsylvania", "44": "Rhode Island",
-            "45": "South Carolina", "46": "South Dakota", "47": "Tennessee", "48": "Texas",
-            "49": "Utah", "50": "Vermont", "51": "Virginia", "53": "Washington",
-            "54": "West Virginia", "55": "Wisconsin", "56": "Wyoming"
-        };
-        
-        // Draw states on expanded map
-        expandedMapContent.selectAll("path.state")
-            .data(states.features)
-            .enter()
-            .append("path")
-            .attr("class", "state")
-            .attr("d", path)
-            .attr("fill", d => {
-                const stateName = stateNames[d.id];
-                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
-                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
-                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
-                return "rgba(100, 150, 200, 0.25)";
-            })
-            .attr("stroke", "rgba(150, 200, 255, 0.4)")
-            .attr("stroke-width", 0.5);
-        
-        // Draw state borders
-        expandedMapContent.append("path")
-            .datum(statesOutline)
-            .attr("class", "state-borders")
-            .attr("d", path)
-            .attr("fill", "none")
-            .attr("stroke", "rgba(150, 200, 255, 0.6)")
-            .attr("stroke-width", 1);
-        
-        // Draw nation outline
-        expandedMapContent.append("path")
-            .datum(nationOutline)
-            .attr("class", "nation-outline")
-            .attr("d", path)
-            .attr("fill", "none")
-            .attr("stroke", "rgba(255, 150, 100, 0.8)")
-            .attr("stroke-width", 2);
-        
-        // Draw minimap states
-        minimapContent.selectAll("path.minimap-state")
-            .data(states.features)
-            .enter()
-            .append("path")
-            .attr("class", "minimap-state")
-            .attr("d", minimapPath)
-            .attr("fill", d => {
-                const stateName = stateNames[d.id];
-                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
-                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
-                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
-                return "rgba(100, 150, 200, 0.3)";
-            })
-            .attr("stroke", "rgba(150, 200, 255, 0.4)")
-            .attr("stroke-width", 0.3);
-        
-        // Draw minimap outline
-        minimapContent.append("path")
-            .datum(nationOutline)
-            .attr("class", "minimap-outline")
-            .attr("d", minimapPath)
-            .attr("fill", "none")
-            .attr("stroke", "rgba(255, 150, 100, 0.6)")
-            .attr("stroke-width", 1);
-        
-        // Add region markers
+        // Update region markers with real data
         addRegionMarkers();
         
+        return coastalRegions;
+        
     } catch (error) {
-        console.error("Error loading map:", error);
-        drawFallbackMap();
+        console.error("Error loading coastal data:", error);
+        // Fallback to hardcoded data
+        coastalRegions = [
+            { 
+                name: "Pacific Coast", 
+                baseTemp: 18,
+                info: "The Pacific Coast stretches from Alaska to California, experiencing significant warming trends. Rising ocean temperatures are affecting marine ecosystems and coastal communities.",
+                states: ["California", "Oregon", "Washington", "Alaska"],
+                markerPos: { x: -300, y: -140 }
+            },
+            { 
+                name: "Atlantic Coast", 
+                baseTemp: 16,
+                info: "The Atlantic Coast from Maine to Florida faces increasing hurricane intensity and sea level rise. Coastal erosion threatens infrastructure and habitats.",
+                states: ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"],
+                markerPos: { x: 270, y: -60 }
+            },
+            { 
+                name: "Gulf Coast", 
+                baseTemp: 22,
+                info: "The Gulf Coast experiences some of the fastest warming rates. Wetland loss, intensified storms, and heat waves pose major challenges to this region.",
+                states: ["Texas", "Louisiana", "Mississippi", "Alabama", "Florida"],
+                markerPos: { x: 100, y: 90 }
+            },
+            { 
+                name: "Mediterranean Climate", 
+                baseTemp: 19,
+                info: "Mediterranean climate zones in California are shifting toward more extreme dry heat conditions, increasing wildfire risk and water scarcity.",
+                states: ["California"],
+                markerPos: { x: -270, y: 40 }
+            },
+            {
+                name: "Hawaiian Coast",
+                baseTemp: 25,
+                info: "Hawaii's coastal regions are vulnerable to sea level rise and coral bleaching due to rising ocean temperatures, impacting tourism and local ecosystems.",
+                states: ["Hawaii"],
+                markerPos: { x: -150, y: 170 }
+            }
+        ];
+        addRegionMarkers();
+        return coastalRegions;
     }
 }
 
+// Process temperature data for a region
+function processTemperatureData(region) {
+    const timeArr = region.time || [];
+    const tempArr = region.temperature_series || [];
+    
+    if (!timeArr.length || !tempArr.length) {
+        // Generate mock data if no real data
+        return generateMockTemperatureData(region.name);
+    }
+    
+    // Convert Kelvin to Celsius
+    const tempsCelsius = tempArr.map(temp => temp - 273.15);
+    
+    // Calculate baseline (average of first 30 years)
+    const baselineYears = Math.min(30, timeArr.length);
+    const baseline = tempsCelsius.slice(0, baselineYears).reduce((a, b) => a + b, 0) / baselineYears;
+    
+    // Calculate anomalies
+    const anomalies = timeArr.map((year, i) => ({
+        year: year,
+        anomaly: tempsCelsius[i] - baseline,
+        actualTemp: tempsCelsius[i]
+    }));
+    
+    // Separate historical and future data
+    const historical = anomalies.filter(d => d.year <= 2024);
+    const future = generateFutureProjections(historical, baseline);
+    
+    return {
+        baseline: baseline,
+        historical: historical,
+        future: future,
+        allData: [...historical, ...future],
+        currentAnomaly: historical[historical.length - 1]?.anomaly || 0,
+        futureAnomaly2100: future[future.length - 1]?.anomaly || 0
+    };
+}
+
+// Generate future projections based on historical trend
+function generateFutureProjections(historical, baseline) {
+    if (historical.length < 10) return [];
+    
+    // Simple linear regression
+    const n = historical.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    
+    historical.forEach((d, i) => {
+        sumX += d.year;
+        sumY += d.anomaly;
+        sumXY += d.year * d.anomaly;
+        sumXX += d.year * d.year;
+    });
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+    
+    // Generate projections to 2100
+    const future = [];
+    const lastYear = historical[historical.length - 1].year;
+    
+    for (let year = lastYear + 1; year <= 2100; year += 5) {
+        const anomaly = slope * year + intercept;
+        future.push({
+            year: year,
+            anomaly: Math.max(0, anomaly),
+            actualTemp: baseline + anomaly,
+            isProjection: true
+        });
+    }
+    
+    return future;
+}
+
+// Generate mock temperature data for demonstration
+function generateMockTemperatureData(regionName) {
+    const baseConfigs = {
+        "Pacific Coast": { baseline: 18, trend: 0.025 },
+        "Atlantic Coast": { baseline: 16, trend: 0.023 },
+        "Gulf Coast": { baseline: 22, trend: 0.030 },
+        "Mediterranean Climate": { baseline: 19, trend: 0.028 },
+        "Hawaiian Coast": { baseline: 25, trend: 0.020 }
+    };
+    
+    const config = baseConfigs[regionName] || { baseline: 20, trend: 0.025 };
+    
+    // Generate historical data (1950-2024)
+    const historical = [];
+    for (let year = 1950; year <= 2024; year++) {
+        const yearsFromStart = year - 1950;
+        // Add some randomness to the trend
+        const randomFactor = 0.5 + Math.random();
+        const anomaly = config.trend * yearsFromStart * randomFactor;
+        historical.push({
+            year: year,
+            anomaly: anomaly,
+            actualTemp: config.baseline + anomaly
+        });
+    }
+    
+    // Generate future projections
+    const future = [];
+    const lastAnomaly = historical[historical.length - 1].anomaly;
+    const futureTrend = config.trend * 1.5; // Accelerated warming
+    
+    for (let year = 2025; year <= 2100; year += 5) {
+        const yearsFromNow = year - 2024;
+        const anomaly = lastAnomaly + (futureTrend * yearsFromNow);
+        future.push({
+            year: year,
+            anomaly: anomaly,
+            actualTemp: config.baseline + anomaly,
+            isProjection: true
+        });
+    }
+    
+    return {
+        baseline: config.baseline,
+        historical: historical,
+        future: future,
+        allData: [...historical, ...future],
+        currentAnomaly: lastAnomaly,
+        futureAnomaly2100: future[future.length - 1].anomaly
+    };
+}
+
+// Create temperature trend chart
+function createTemperatureChart(region, regionData) {
+    // Remove existing chart
+    if (activeChart) {
+        activeChart.remove();
+        activeChart = null;
+    }
+    
+    // Create chart container
+    const chartContainer = document.createElement('div');
+    chartContainer.className = 'temperature-chart-container';
+    chartContainer.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        width: 500px;
+        height: 450px;
+        background: rgba(10, 20, 40, 0.97);
+        border: 2px solid rgba(255, 150, 100, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        z-index: 10001;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        color: white;
+        font-family: 'Arial', sans-serif;
+        backdrop-filter: blur(10px);
+        overflow-y: auto;
+        max-height: 80vh;
+    `;
+    
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 100, 100, 0.3);
+        border: 2px solid #ff6b6b;
+        color: #ff6b6b;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10002;
+    `;
+    closeBtn.onclick = () => {
+        chartContainer.remove();
+        activeChart = null;
+    };
+    
+    // Chart title
+    const title = document.createElement('h3');
+    title.textContent = `${region.name} Temperature Trends`;
+    title.style.cssText = `
+        margin: 0 0 20px 0;
+        color: #ffa500;
+        font-family: 'Playfair Display', serif;
+        font-size: 22px;
+        text-align: center;
+        padding-right: 30px;
+    `;
+    
+    // Chart canvas
+    const chartCanvas = document.createElement('div');
+    chartCanvas.id = `chart-${region.name.replace(/\s+/g, '-')}`;
+    chartCanvas.style.cssText = `
+        height: 250px;
+        margin-bottom: 20px;
+    `;
+    
+    // Info section
+    const infoSection = document.createElement('div');
+    infoSection.style.cssText = `
+        background: rgba(20, 30, 50, 0.8);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+    `;
+    
+    // Assemble chart
+    chartContainer.appendChild(closeBtn);
+    chartContainer.appendChild(title);
+    chartContainer.appendChild(chartCanvas);
+    chartContainer.appendChild(infoSection);
+    document.body.appendChild(chartContainer);
+    
+    activeChart = chartContainer;
+    
+    // Draw the chart
+    drawChart(chartCanvas, region, regionData);
+    
+    // Update info section
+    updateInfoSection(infoSection, region, regionData);
+    
+    return chartContainer;
+}
+
+// Draw D3 chart
+function drawChart(container, region, regionData) {
+    const margin = { top: 30, right: 40, bottom: 50, left: 60 };
+    const width = 460 - margin.left - margin.right;
+    const height = 200 - margin.top - margin.bottom;
+    
+    // Clear container
+    container.innerHTML = '';
+    
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Combine data
+    const allData = regionData.allData;
+    const historical = regionData.historical;
+    const future = regionData.future;
+    
+    // Create scales
+    const x = d3.scaleLinear()
+        .domain([1950, 2100])
+        .range([0, width]);
+    
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(allData, d => d.anomaly) * 1.1])
+        .range([height, 0]);
+    
+    // Create line generator
+    const line = d3.line()
+        .x(d => x(d.year))
+        .y(d => y(d.anomaly))
+        .curve(d3.curveMonotoneX);
+    
+    // Add grid
+    svg.append('g')
+        .attr('class', 'grid')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x)
+            .ticks(6)
+            .tickSize(-height)
+            .tickFormat(''));
+    
+    svg.append('g')
+        .attr('class', 'grid')
+        .call(d3.axisLeft(y)
+            .ticks(5)
+            .tickSize(-width)
+            .tickFormat(''));
+    
+    // Draw historical line
+    svg.append('path')
+        .datum(historical)
+        .attr('class', 'temperature-line')
+        .attr('d', line)
+        .attr('fill', 'none')
+        .attr('stroke', '#4a90e2')
+        .attr('stroke-width', 3);
+    
+    // Draw projection line
+    if (future.length > 0) {
+        const projectionData = [historical[historical.length - 1], ...future];
+        svg.append('path')
+            .datum(projectionData)
+            .attr('class', 'temperature-line projection')
+            .attr('d', line)
+            .attr('fill', 'none')
+            .attr('stroke', '#e74c3c')
+            .attr('stroke-width', 3)
+            .attr('stroke-dasharray', '5,5');
+    }
+    
+    // Add axes
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(6).tickFormat(d3.format('d')))
+        .selectAll('text')
+        .style('fill', 'rgba(255,255,255,0.8)')
+        .style('font-size', '12px');
+    
+    svg.append('g')
+        .call(d3.axisLeft(y).ticks(5))
+        .selectAll('text')
+        .style('fill', 'rgba(255,255,255,0.8)')
+        .style('font-size', '12px');
+    
+    // Axis labels
+    svg.append('text')
+        .attr('transform', `translate(${width/2},${height + 40})`)
+        .style('text-anchor', 'middle')
+        .style('fill', 'rgba(255,255,255,0.8)')
+        .style('font-size', '12px')
+        .text('Year');
+    
+    svg.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', -margin.left + 15)
+        .attr('x', -height/2)
+        .style('text-anchor', 'middle')
+        .style('fill', 'rgba(255,255,255,0.8)')
+        .style('font-size', '12px')
+        .text('Temperature Anomaly (°C)');
+    
+    // Add legend
+    const legend = svg.append('g')
+        .attr('transform', `translate(${width - 150}, 10)`);
+    
+    legend.append('line')
+        .attr('x1', 0)
+        .attr('x2', 20)
+        .attr('y1', 0)
+        .attr('y2', 0)
+        .attr('stroke', '#4a90e2')
+        .attr('stroke-width', 2);
+    
+    legend.append('text')
+        .attr('x', 25)
+        .attr('y', 4)
+        .text('Historical (1950-2024)')
+        .style('fill', 'rgba(255,255,255,0.8)')
+        .style('font-size', '11px');
+    
+    legend.append('line')
+        .attr('x1', 0)
+        .attr('x2', 20)
+        .attr('y1', 20)
+        .attr('y2', 20)
+        .attr('stroke', '#e74c3c')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+    
+    legend.append('text')
+        .attr('x', 25)
+        .attr('y', 24)
+        .text('Projection (2025-2100)')
+        .style('fill', 'rgba(255,255,255,0.8)')
+        .style('font-size', '11px');
+    
+    // Add current year marker
+    const currentAnomaly = regionData.currentAnomaly;
+    svg.append('circle')
+        .attr('cx', x(2024))
+        .attr('cy', y(currentAnomaly))
+        .attr('r', 4)
+        .attr('fill', '#ffcc00');
+    
+    svg.append('text')
+        .attr('x', x(2024) + 10)
+        .attr('y', y(currentAnomaly) - 10)
+        .text(`2024: +${currentAnomaly.toFixed(1)}°C`)
+        .style('fill', '#ffcc00')
+        .style('font-size', '11px')
+        .style('font-weight', 'bold');
+    
+    // Add 2100 projection marker
+    const futureAnomaly = regionData.futureAnomaly2100;
+    if (futureAnomaly) {
+        svg.append('circle')
+            .attr('cx', x(2100))
+            .attr('cy', y(futureAnomaly))
+            .attr('r', 4)
+            .attr('fill', '#e74c3c');
+        
+        svg.append('text')
+            .attr('x', x(2100) - 80)
+            .attr('y', y(futureAnomaly) - 10)
+            .text(`2100: +${futureAnomaly.toFixed(1)}°C`)
+            .style('fill', '#e74c3c')
+            .style('font-size', '11px')
+            .style('font-weight', 'bold');
+    }
+}
+
+// Update info section
+function updateInfoSection(container, region, regionData) {
+    const currentTemp = regionData.baseline + regionData.currentAnomaly;
+    const futureTemp = regionData.baseline + regionData.futureAnomaly2100;
+    const increase = futureTemp - currentTemp;
+    
+    const html = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div style="background: rgba(74, 144, 226, 0.2); padding: 10px; border-radius: 8px;">
+                <div style="font-size: 12px; color: #7fb3d5;">Current Temp</div>
+                <div style="font-size: 24px; color: white; font-weight: bold;">${currentTemp.toFixed(1)}°C</div>
+            </div>
+            <div style="background: rgba(231, 76, 60, 0.2); padding: 10px; border-radius: 8px;">
+                <div style="font-size: 12px; color: #e74c3c;">Projected 2100</div>
+                <div style="font-size: 24px; color: white; font-weight: bold;">${futureTemp.toFixed(1)}°C</div>
+            </div>
+        </div>
+        <div style="background: rgba(255, 165, 0, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+            <div style="font-size: 12px; color: #ffa500;">Projected Increase</div>
+            <div style="font-size: 20px; color: white; font-weight: bold;">+${increase.toFixed(1)}°C</div>
+        </div>
+        <div style="font-size: 13px; line-height: 1.4;">
+            <p><strong>Key Insights:</strong></p>
+            <ul style="margin: 5px 0; padding-left: 20px;">
+                <li>Baseline temperature: ${regionData.baseline.toFixed(1)}°C</li>
+                <li>Current anomaly: +${regionData.currentAnomaly.toFixed(1)}°C</li>
+                <li>Projected 2100 anomaly: +${regionData.futureAnomaly2100.toFixed(1)}°C</li>
+                <li>Historical data points: ${regionData.historical.length}</li>
+            </ul>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// ==============================================
+// MODIFIED REGION MARKER FUNCTIONS
+// ==============================================
+
 function addRegionMarkers() {
+    // Clear existing markers
+    regionMarkers.selectAll("*").remove();
+    
     coastalRegions.forEach(region => {
         const markerGroup = regionMarkers.append("g")
             .attr("class", "region-marker")
             .attr("transform", `translate(${region.markerPos.x}, ${region.markerPos.y})`)
             .style("cursor", "pointer");
+        
+        // Add chart icon to marker
+        markerGroup.append("path")
+            .attr("class", "chart-icon")
+            .attr("d", "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z")
+            .attr("transform", "translate(-6, -24) scale(0.8)")
+            .attr("fill", "#ffcc00")
+            .attr("opacity", 0)
+            .style("pointer-events", "none");
         
         // Pulsing outer ring
         markerGroup.append("circle")
@@ -472,24 +833,42 @@ function addRegionMarkers() {
             .attr("font-weight", "bold")
             .text(region.name);
         
-        // Click handler for region info
-        markerGroup.on("click", function(event) {
+        // Enhanced click handler
+        markerGroup.on("click", async function(event) {
             event.stopPropagation();
+            
+            // Show info panel with fun facts
             showRegionInfo(region);
+            
+            // Show temperature chart if data exists
+            if (region.processedData) {
+                createTemperatureChart(region, region.processedData);
+            } else {
+                // Try to process data on the fly
+                const processedData = processTemperatureData(region);
+                region.processedData = processedData;
+                createTemperatureChart(region, processedData);
+            }
         });
         
-        // Hover effects
+        // Enhanced hover effects
         markerGroup.on("mouseenter", function() {
             d3.select(this).select(".marker-dot")
                 .transition()
                 .duration(200)
                 .attr("r", 16)
                 .attr("fill", "#ffcc00");
+            
             d3.select(this).select(".pulse-ring")
                 .transition()
                 .duration(200)
                 .attr("r", 24)
                 .attr("opacity", 0.8);
+            
+            d3.select(this).select(".chart-icon")
+                .transition()
+                .duration(200)
+                .attr("opacity", 1);
         });
         
         markerGroup.on("mouseleave", function() {
@@ -498,13 +877,180 @@ function addRegionMarkers() {
                 .duration(200)
                 .attr("r", 12)
                 .attr("fill", "#ff6b35");
+            
             d3.select(this).select(".pulse-ring")
                 .transition()
                 .duration(200)
                 .attr("r", 18)
                 .attr("opacity", 0.5);
+            
+            d3.select(this).select(".chart-icon")
+                .transition()
+                .duration(200)
+                .attr("opacity", 0);
         });
     });
+}
+
+function showRegionInfo(region) {
+    const baseTemp = region.processedData ? 
+        region.processedData.baseline.toFixed(1) : 
+        region.baseTemp || "N/A";
+    
+    infoTitle.text(`${region.name} — Baseline: ${baseTemp}°C`);
+    
+    // Enhanced info text that mentions chart
+    const enhancedInfo = `${region.info} Click to see detailed temperature trends and projections.`;
+    
+    const words = enhancedInfo.split(' ');
+    let line1 = '';
+    let line2 = '';
+    let currentLine = 1;
+    
+    words.forEach(word => {
+        if (currentLine === 1 && line1.length + word.length < 110) {
+            line1 += (line1 ? ' ' : '') + word;
+        } else {
+            currentLine = 2;
+            line2 += (line2 ? ' ' : '') + word;
+        }
+    });
+    
+    infoText.selectAll("tspan").remove();
+    infoText.append("tspan").attr("x", 0).attr("dy", 0).text(line1);
+    if (line2) {
+        infoText.append("tspan").attr("x", 0).attr("dy", "1.3em").text(line2);
+    }
+    
+    infoPanel.transition()
+        .duration(400)
+        .style("opacity", 1);
+}
+
+// ==============================================
+// EXISTING FUNCTIONS (modified)
+// ==============================================
+
+async function loadUSMap() {
+    try {
+        // Load TopoJSON data for US states
+        const response = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json');
+        const us = await response.json();
+        
+        usMapData = us;
+        
+        // Convert TopoJSON to GeoJSON
+        const states = topojson.feature(us, us.objects.states);
+        const statesOutline = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
+        const nationOutline = topojson.mesh(us, us.objects.states, (a, b) => a === b);
+        
+        // Create projection for expanded map
+        const projection = d3.geoAlbersUsa()
+            .scale(900)
+            .translate([0, 0]);
+        
+        const path = d3.geoPath().projection(projection);
+        
+        // Create projection for minimap
+        const minimapProjection = d3.geoAlbersUsa()
+            .scale(150)
+            .translate([70, 50]);
+        
+        const minimapPath = d3.geoPath().projection(minimapProjection);
+        
+        // Define coastal states for highlighting
+        const pacificStates = ["California", "Oregon", "Washington", "Alaska"];
+        const atlanticStates = ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"];
+        const gulfStates = ["Texas", "Louisiana", "Mississippi", "Alabama"];
+        const hawaiiCoast = ["Hawaii"];
+        
+        // State names lookup (FIPS codes)
+        const stateNames = {
+            "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas",
+            "06": "California", "08": "Colorado", "09": "Connecticut", "10": "Delaware",
+            "11": "District of Columbia", "12": "Florida", "13": "Georgia", "15": "Hawaii",
+            "16": "Idaho", "17": "Illinois", "18": "Indiana", "19": "Iowa",
+            "20": "Kansas", "21": "Kentucky", "22": "Louisiana", "23": "Maine",
+            "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota",
+            "28": "Mississippi", "29": "Missouri", "30": "Montana", "31": "Nebraska",
+            "32": "Nevada", "33": "New Hampshire", "34": "New Jersey", "35": "New Mexico",
+            "36": "New York", "37": "North Carolina", "38": "North Dakota", "39": "Ohio",
+            "40": "Oklahoma", "41": "Oregon", "42": "Pennsylvania", "44": "Rhode Island",
+            "45": "South Carolina", "46": "South Dakota", "47": "Tennessee", "48": "Texas",
+            "49": "Utah", "50": "Vermont", "51": "Virginia", "53": "Washington",
+            "54": "West Virginia", "55": "Wisconsin", "56": "Wyoming"
+        };
+        
+        // Draw states on expanded map
+        expandedMapContent.selectAll("path.state")
+            .data(states.features)
+            .enter()
+            .append("path")
+            .attr("class", "state")
+            .attr("d", path)
+            .attr("fill", d => {
+                const stateName = stateNames[d.id];
+                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
+                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
+                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
+                if (hawaiiCoast.includes(stateName)) return "rgba(78, 175, 88, 0.82)";
+                return "rgba(100, 150, 200, 0.25)";
+            })
+            .attr("stroke", "rgba(150, 200, 255, 0.4)")
+            .attr("stroke-width", 0.5);
+        
+        // Draw state borders
+        expandedMapContent.append("path")
+            .datum(statesOutline)
+            .attr("class", "state-borders")
+            .attr("d", path)
+            .attr("fill", "none")
+            .attr("stroke", "rgba(150, 200, 255, 0.6)")
+            .attr("stroke-width", 1);
+        
+        // Draw nation outline
+        expandedMapContent.append("path")
+            .datum(nationOutline)
+            .attr("class", "nation-outline")
+            .attr("d", path)
+            .attr("fill", "none")
+            .attr("stroke", "rgba(255, 150, 100, 0.8)")
+            .attr("stroke-width", 2);
+        
+        // Draw minimap states
+        minimapContent.selectAll("path.minimap-state")
+            .data(states.features)
+            .enter()
+            .append("path")
+            .attr("class", "minimap-state")
+            .attr("d", minimapPath)
+            .attr("fill", d => {
+                const stateName = stateNames[d.id];
+                if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
+                if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
+                if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
+                if (hawaiiCoast.includes(stateName)) return "rgba(78, 175, 88, 0.82)";
+                return "rgba(100, 150, 200, 0.3)";
+            })
+            .attr("stroke", "rgba(150, 200, 255, 0.4)")
+            .attr("stroke-width", 0.3);
+        
+        // Draw minimap outline
+        minimapContent.append("path")
+            .datum(nationOutline)
+            .attr("class", "minimap-outline")
+            .attr("d", minimapPath)
+            .attr("fill", "none")
+            .attr("stroke", "rgba(255, 150, 100, 0.6)")
+            .attr("stroke-width", 1);
+        
+        // Load coastal data and add markers
+        await loadCoastalData();
+        
+    } catch (error) {
+        console.error("Error loading map:", error);
+        drawFallbackMap();
+    }
 }
 
 function drawFallbackMap() {
@@ -516,7 +1062,8 @@ function drawFallbackMap() {
         .attr("stroke", "rgba(150, 200, 255, 0.5)")
         .attr("stroke-width", 2);
     
-    addRegionMarkers();
+    // Load coastal data for fallback
+    loadCoastalData();
 }
 
 // Load TopoJSON library and then the map
@@ -525,385 +1072,81 @@ topojsonScript.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3';
 topojsonScript.onload = loadUSMap;
 document.head.appendChild(topojsonScript);
 
-// === CROCKPOT SVG DEFINITIONS ===
-const defs = svg.append("defs");
-
-// Gradient for crockpot body (ceramic look)
-const potBodyGradient = defs.append("linearGradient")
-    .attr("id", "potBodyGradient")
-    .attr("x1", "0%").attr("y1", "0%")
-    .attr("x2", "100%").attr("y2", "100%");
-potBodyGradient.append("stop").attr("offset", "0%").attr("stop-color", "#8B4513");
-potBodyGradient.append("stop").attr("offset", "30%").attr("stop-color", "#A0522D");
-potBodyGradient.append("stop").attr("offset", "50%").attr("stop-color", "#CD853F");
-potBodyGradient.append("stop").attr("offset", "70%").attr("stop-color", "#A0522D");
-potBodyGradient.append("stop").attr("offset", "100%").attr("stop-color", "#654321");
-
-// Gradient for metallic rim
-const rimGradient = defs.append("linearGradient")
-    .attr("id", "rimGradient")
-    .attr("x1", "0%").attr("y1", "0%")
-    .attr("x2", "0%").attr("y2", "100%");
-rimGradient.append("stop").attr("offset", "0%").attr("stop-color", "#E8E8E8");
-rimGradient.append("stop").attr("offset", "20%").attr("stop-color", "#C0C0C0");
-rimGradient.append("stop").attr("offset", "50%").attr("stop-color", "#A8A8A8");
-rimGradient.append("stop").attr("offset", "80%").attr("stop-color", "#808080");
-rimGradient.append("stop").attr("offset", "100%").attr("stop-color", "#606060");
-
-// Gradient for glass lid
-const lidGradient = defs.append("linearGradient")
-    .attr("id", "lidGradient")
-    .attr("x1", "0%").attr("y1", "0%")
-    .attr("x2", "0%").attr("y2", "100%");
-lidGradient.append("stop").attr("offset", "0%").attr("stop-color", "rgba(200, 230, 255, 0.4)");
-lidGradient.append("stop").attr("offset", "50%").attr("stop-color", "rgba(150, 200, 240, 0.2)");
-lidGradient.append("stop").attr("offset", "100%").attr("stop-color", "rgba(100, 150, 200, 0.3)");
-
-// Water/liquid gradient (will be animated based on temperature)
-const waterGradient = defs.append("linearGradient")
-    .attr("id", "waterGradient")
-    .attr("x1", "0%").attr("y1", "100%")
-    .attr("x2", "0%").attr("y2", "0%");
-waterGradient.append("stop").attr("offset", "0%").attr("stop-color", "#4a90e2").attr("class", "water-bottom");
-waterGradient.append("stop").attr("offset", "100%").attr("stop-color", "#87CEEB").attr("class", "water-top");
-
-// Glow filter for heat effect
-const glowFilter = defs.append("filter")
-    .attr("id", "heatGlow")
-    .attr("x", "-50%").attr("y", "-50%")
-    .attr("width", "200%").attr("height", "200%");
-glowFilter.append("feGaussianBlur").attr("stdDeviation", "8").attr("result", "blur");
-glowFilter.append("feComposite").attr("in", "SourceGraphic").attr("in2", "blur").attr("operator", "over");
-
-// Shadow filter
-const shadowFilter = defs.append("filter")
-    .attr("id", "potShadow")
-    .attr("x", "-20%").attr("y", "-20%")
-    .attr("width", "140%").attr("height", "140%");
-shadowFilter.append("feDropShadow")
-    .attr("dx", "5").attr("dy", "10")
-    .attr("stdDeviation", "8")
-    .attr("flood-color", "rgba(0,0,0,0.5)");
-
-// === CROCKPOT BASE/HEATING ELEMENT ===
-// Outer base (black plastic housing)
-potGroup.append("ellipse")
+// Pot body
+const pot = potGroup.append("ellipse")
     .attr("cx", 0)
-    .attr("cy", 140)
-    .attr("rx", 170)
-    .attr("ry", 35)
-    .attr("fill", "#1a1a1a")
-    .attr("stroke", "#333")
-    .attr("stroke-width", 2);
-
-// Base front panel
-potGroup.append("rect")
-    .attr("x", -170)
-    .attr("y", 105)
-    .attr("width", 340)
-    .attr("height", 70)
-    .attr("rx", 5)
-    .attr("fill", "#1a1a1a")
-    .attr("stroke", "#333")
-    .attr("stroke-width", 2);
-
-// Control panel area
-potGroup.append("rect")
-    .attr("x", -60)
-    .attr("y", 115)
-    .attr("width", 120)
-    .attr("height", 45)
-    .attr("rx", 3)
-    .attr("fill", "#2a2a2a")
-    .attr("stroke", "#444")
-    .attr("stroke-width", 1);
-
-// Temperature dial
-const dialGroup = potGroup.append("g").attr("transform", "translate(-25, 137)");
-dialGroup.append("circle")
-    .attr("r", 15)
-    .attr("fill", "#3a3a3a")
-    .attr("stroke", "#555")
-    .attr("stroke-width", 2);
-dialGroup.append("circle")
-    .attr("r", 10)
-    .attr("fill", "#222")
-    .attr("stroke", "#444")
-    .attr("stroke-width", 1);
-const dialIndicator = dialGroup.append("line")
-    .attr("x1", 0).attr("y1", 0)
-    .attr("x2", 0).attr("y2", -8)
-    .attr("stroke", "#ff6b35")
-    .attr("stroke-width", 2)
-    .attr("stroke-linecap", "round");
-
-// Power indicator light
-const powerLight = potGroup.append("circle")
-    .attr("cx", 25)
-    .attr("cy", 137)
-    .attr("r", 6)
-    .attr("fill", "#00ff00")
-    .attr("filter", "url(#heatGlow)");
-
-// Label on base
-potGroup.append("text")
-    .attr("x", 0)
-    .attr("y", 155)
-    .attr("text-anchor", "middle")
-    .attr("fill", "#666")
-    .attr("font-size", "10px")
-    .attr("font-family", "Arial, sans-serif")
-    .text("CLIMATE COOKER");
-
-// === CERAMIC POT BODY ===
-// Shadow under pot
-potGroup.append("ellipse")
-    .attr("cx", 5)
-    .attr("cy", 110)
-    .attr("rx", 155)
-    .attr("ry", 25)
-    .attr("fill", "rgba(0,0,0,0.3)")
-    .attr("filter", "url(#potShadow)");
-
-// Main ceramic body
-const pot = potGroup.append("path")
-    .attr("d", `
-        M -150 -30
-        Q -160 40 -145 95
-        Q -130 105 0 110
-        Q 130 105 145 95
-        Q 160 40 150 -30
-        Q 140 -45 0 -50
-        Q -140 -45 -150 -30
-        Z
-    `)
-    .attr("fill", "url(#potBodyGradient)")
-    .attr("stroke", "#5D3A1A")
+    .attr("cy", 50)
+    .attr("rx", 150)
+    .attr("ry", 120)
+    .attr("fill", "#333")
+    .attr("stroke", "#666")
     .attr("stroke-width", 3);
 
-// Ceramic body highlight (left side shine)
-potGroup.append("path")
-    .attr("d", `
-        M -140 -20
-        Q -145 30 -135 80
-        Q -130 85 -120 85
-        Q -125 30 -130 -15
-        Z
-    `)
-    .attr("fill", "rgba(255,255,255,0.15)");
-
-// Decorative band on pot
+// Pot rim
 potGroup.append("ellipse")
     .attr("cx", 0)
-    .attr("cy", 30)
-    .attr("rx", 152)
-    .attr("ry", 12)
-    .attr("fill", "none")
-    .attr("stroke", "#8B4513")
-    .attr("stroke-width", 4)
-    .attr("opacity", 0.6);
-
-// === INNER POT (visible through opening) ===
-potGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", -45)
-    .attr("rx", 130)
+    .attr("cy", -70)
+    .attr("rx", 160)
     .attr("ry", 20)
-    .attr("fill", "#1a1a2e");
+    .attr("fill", "#444")
+    .attr("stroke", "#666")
+    .attr("stroke-width", 3);
 
-// === LIQUID/WATER INSIDE ===
+// Water/heat level
 const heatLevel = potGroup.append("ellipse")
     .attr("cx", 0)
-    .attr("cy", -40)
-    .attr("rx", 125)
-    .attr("ry", 18)
-    .attr("fill", "url(#waterGradient)")
-    .attr("opacity", 0.85);
-
-// Liquid surface reflection
-potGroup.append("ellipse")
-    .attr("cx", -30)
-    .attr("cy", -42)
-    .attr("rx", 40)
-    .attr("ry", 6)
-    .attr("fill", "rgba(255,255,255,0.2)");
-
-// === METALLIC RIM ===
-potGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", -50)
-    .attr("rx", 155)
-    .attr("ry", 18)
-    .attr("fill", "url(#rimGradient)")
-    .attr("stroke", "#666")
-    .attr("stroke-width", 2);
-
-// Inner rim edge
-potGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", -48)
-    .attr("rx", 135)
-    .attr("ry", 14)
-    .attr("fill", "none")
-    .attr("stroke", "#888")
-    .attr("stroke-width", 1);
-
-// === GLASS LID ===
-const lidGroup = potGroup.append("g").attr("class", "lid-group");
-
-// Lid dome
-lidGroup.append("path")
-    .attr("d", `
-        M -140 -55
-        Q -145 -100 -80 -120
-        Q 0 -135 80 -120
-        Q 145 -100 140 -55
-        Q 130 -50 0 -48
-        Q -130 -50 -140 -55
-        Z
-    `)
-    .attr("fill", "url(#lidGradient)")
-    .attr("stroke", "rgba(150, 180, 200, 0.6)")
-    .attr("stroke-width", 2);
-
-// Lid highlight reflection
-lidGroup.append("path")
-    .attr("d", `
-        M -100 -80
-        Q -60 -110 20 -105
-        Q 40 -100 30 -85
-        Q -20 -90 -80 -75
-        Z
-    `)
-    .attr("fill", "rgba(255,255,255,0.25)");
-
-// Lid handle base
-lidGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", -125)
-    .attr("rx", 25)
-    .attr("ry", 8)
-    .attr("fill", "#2a2a2a")
-    .attr("stroke", "#444")
-    .attr("stroke-width", 1);
-
-// Lid handle
-lidGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", -130)
-    .attr("rx", 18)
-    .attr("ry", 12)
-    .attr("fill", "#1a1a1a")
-    .attr("stroke", "#333")
-    .attr("stroke-width", 2);
-
-// Handle highlight
-lidGroup.append("ellipse")
-    .attr("cx", -5)
-    .attr("cy", -133)
-    .attr("rx", 6)
-    .attr("ry", 4)
-    .attr("fill", "rgba(255,255,255,0.2)");
-
-// === STEAM VENTS ===
-const steamGroup = potGroup.append("g").attr("class", "steam-group");
-
-// Steam particles (will be animated)
-for (let i = 0; i < 8; i++) {
-    steamGroup.append("ellipse")
-        .attr("class", "steam-particle")
-        .attr("cx", -40 + Math.random() * 80)
-        .attr("cy", -140 - Math.random() * 20)
-        .attr("rx", 4 + Math.random() * 6)
-        .attr("ry", 3 + Math.random() * 4)
-        .attr("fill", "rgba(255,255,255,0.3)")
-        .attr("opacity", 0);
-}
-
-// === HANDLES ON SIDES ===
-// Left handle
-const leftHandle = potGroup.append("g").attr("transform", "translate(-155, 20)");
-leftHandle.append("path")
-    .attr("d", "M 0 -15 Q -25 -15 -30 0 Q -25 15 0 15")
-    .attr("fill", "none")
-    .attr("stroke", "#1a1a1a")
-    .attr("stroke-width", 12)
-    .attr("stroke-linecap", "round");
-leftHandle.append("path")
-    .attr("d", "M 0 -15 Q -25 -15 -30 0 Q -25 15 0 15")
-    .attr("fill", "none")
-    .attr("stroke", "#333")
-    .attr("stroke-width", 8)
-    .attr("stroke-linecap", "round");
-
-// Right handle
-const rightHandle = potGroup.append("g").attr("transform", "translate(155, 20)");
-rightHandle.append("path")
-    .attr("d", "M 0 -15 Q 25 -15 30 0 Q 25 15 0 15")
-    .attr("fill", "none")
-    .attr("stroke", "#1a1a1a")
-    .attr("stroke-width", 12)
-    .attr("stroke-linecap", "round");
-rightHandle.append("path")
-    .attr("d", "M 0 -15 Q 25 -15 30 0 Q 25 15 0 15")
-    .attr("fill", "none")
-    .attr("stroke", "#333")
-    .attr("stroke-width", 8)
-    .attr("stroke-linecap", "round");
-
-// === BUBBLES GROUP (for animation) ===
-const bubblesGroup = potGroup.append("g").attr("class", "bubbles-group");
-
-// === HEAT GLOW UNDER POT ===
-const heatGlowEllipse = potGroup.append("ellipse")
-    .attr("cx", 0)
-    .attr("cy", 115)
+    .attr("cy", 40)
     .attr("rx", 140)
-    .attr("ry", 20)
-    .attr("fill", "rgba(255, 100, 50, 0)")
-    .attr("filter", "url(#heatGlow)")
-    .attr("class", "heat-glow");
+    .attr("ry", 100)
+    .attr("fill", "#4a90e2")
+    .attr("opacity", 0.6);
+
+// Bubbles
+const bubblesGroup = potGroup.append("g");
 
 // Region labels feeding into pot
 const regionsGroup = mainGroup.append("g");
 
-coastalRegions.forEach((region, i) => {
-    const angle = (i * Math.PI / 2) - Math.PI / 4;
-    const distance = 250;
-    const x = width/2 + Math.cos(angle) * distance;
-    const y = height/2 + Math.sin(angle) * distance;
+// Update region labels when data is loaded
+function updateRegionLabels() {
+    regionsGroup.selectAll("*").remove();
+    
+    coastalRegions.forEach((region, i) => {
+        const angle = (i * Math.PI / 2) - Math.PI / 4;
+        const distance = 250;
+        const x = width/2 + Math.cos(angle) * distance;
+        const y = height/2 + Math.sin(angle) * distance;
 
-    // Arrow to pot
-    regionsGroup.append("line")
-        .attr("x1", x)
-        .attr("y1", y)
-        .attr("x2", width/2 + Math.cos(angle) * 160)
-        .attr("y2", height/2 + Math.sin(angle) * 80)
-        .attr("stroke", "#666")
-        .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "5,5")
-        .attr("opacity", 0.5);
+        // Arrow to pot
+        regionsGroup.append("line")
+            .attr("x1", region.name === "Hawaiian Coast" ? x + 100 : x)
+            .attr("y1", region.name === "Hawaiian Coast" ? y + 100 : y)
+            .attr("x2", width/2 + Math.cos(angle) * 160)
+            .attr("y2", height/2 + Math.sin(angle) * 80)
+            .attr("stroke", "#666")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "5,5")
+            .attr("opacity", 0.5);
 
-    // Region label
-    regionsGroup.append("text")
-        .attr("x", x)
-        .attr("y", y)
-        .attr("text-anchor", "middle")
-        .attr("fill", "#fff")
-        .attr("font-size", "14px")
-        .text(region.name);
-});
+        // Region label
+        regionsGroup.append("text")
+            .attr("x", region.name === "Hawaiian Coast" ? x + 100 : x)
+            .attr("y", region.name === "Hawaiian Coast" ? y + 100 : y)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#fff")
+            .attr("font-size", "14px")
+            .text(region.name);
+    });
+}
 
-// Temperature label - positioned above the lid
+// Temperature label
 const tempLabel = potGroup.append("text")
     .attr("x", 0)
-    .attr("y", -180)
+    .attr("y", -100)
     .attr("text-anchor", "middle")
     .attr("fill", "#fff")
-    .attr("font-size", "32px")
-    .attr("font-weight", "bold")
-    .attr("filter", "url(#heatGlow)")
-    .style("text-shadow", "0 0 10px rgba(255, 150, 100, 0.8)");
+    .attr("font-size", "24px")
+    .attr("font-weight", "bold");
 
 // Toggle map expansion
 function toggleMapExpansion() {
@@ -913,7 +1156,7 @@ function toggleMapExpansion() {
         // Shrink pot and show expanded map
         potGroup.transition()
             .duration(600)
-            .attr("transform", `translate(${width - 150}, ${height - 130}) scale(0.15)`);
+            .attr("transform", `translate(${width / 4}, ${height / 2}) scale(1)`);
         
         regionsGroup.transition()
             .duration(400)
@@ -924,6 +1167,10 @@ function toggleMapExpansion() {
             .style("opacity", 0)
             .style("pointer-events", "none");
         
+        // Reset position to correct location before showing
+        expandedMapGroup
+            .attr("transform", `translate(${width * 0.65}, ${height / 2}) scale(0.75)`);
+        
         expandedMapGroup.transition()
             .duration(600)
             .style("opacity", 1)
@@ -931,6 +1178,12 @@ function toggleMapExpansion() {
         
         // Hide info panel when opening
         infoPanel.style("opacity", 0);
+        
+        // Close any open chart
+        if (activeChart) {
+            activeChart.remove();
+            activeChart = null;
+        }
         
     } else {
         // Restore pot and hide expanded map
@@ -948,11 +1201,17 @@ function toggleMapExpansion() {
             .delay(400)
             .style("opacity", 1)
             .style("pointer-events", "all");
-        
+
         expandedMapGroup.transition()
-            .duration(400)
+            .duration(600)
             .style("opacity", 0)
             .style("pointer-events", "none");
+        
+        // Close any open chart
+        if (activeChart) {
+            activeChart.remove();
+            activeChart = null;
+        }
     }
 }
 
@@ -979,157 +1238,72 @@ function pulseMarkers() {
 
 // Start pulsing after a delay to let markers load
 setTimeout(pulseMarkers, 1000);
+
 let bubbleInterval = null;
-let steamInterval = null;
-let lidShakeInterval = null;
 
 function updateVisualization(step) {
     currentStep = step;
     const projection = projections[step];
     const temp = projection.tempIncrease;
-    const intensity = step / 4; // 0 to 1 based on step
     
-    // Update water gradient colors based on temperature
-    const waterColors = [
-        { bottom: "#4a90e2", top: "#87CEEB" },      // Cool blue
-        { bottom: "#5a9fd4", top: "#98d4e8" },      // Slightly warmer
-        { bottom: "#e6a756", top: "#f0c87d" },      // Warming orange
-        { bottom: "#e67e22", top: "#f39c12" },      // Hot orange
-        { bottom: "#c0392b", top: "#e74c3c" }       // Boiling red
-    ];
-    
-    const colors = waterColors[step];
-    d3.select(".water-bottom").transition().duration(800).attr("stop-color", colors.bottom);
-    d3.select(".water-top").transition().duration(800).attr("stop-color", colors.top);
-    
-    // Update heat level opacity (more opaque when hotter)
+    // Update heat level color
     heatLevel
         .transition()
         .duration(800)
-        .attr("opacity", 0.7 + intensity * 0.25);
-
-    // Update heat glow under pot
-    d3.select(".heat-glow")
-        .transition()
-        .duration(800)
-        .attr("fill", `rgba(255, ${100 - intensity * 50}, 50, ${intensity * 0.6})`);
-    
-    // Update power light color (green -> yellow -> red)
-    const lightColors = ["#00ff00", "#7fff00", "#ffff00", "#ff8800", "#ff0000"];
-    powerLight
-        .transition()
-        .duration(400)
-        .attr("fill", lightColors[step]);
-    
-    // Rotate dial indicator based on step
-    const dialAngle = -90 + (step * 45); // From -90 to 90 degrees
-    dialIndicator
-        .transition()
-        .duration(600)
-        .attr("transform", `rotate(${dialAngle})`);
+        .attr("fill", projection.color);
 
     // Update temperature label
     tempLabel.text(`+${temp.toFixed(1)}°C`);
 
-    // Stop previous animations
+    // Create bubbles based on temperature
+    const numBubbles = Math.floor(temp * 5);
+    
+    bubblesGroup.selectAll("circle").remove();
+    
+    for (let i = 0; i < numBubbles; i++) {
+        bubblesGroup.append("circle")
+            .attr("cx", (Math.random() - 0.5) * 200)
+            .attr("cy", 80)
+            .attr("r", 3 + Math.random() * 5)
+            .attr("fill", "white")
+            .attr("opacity", 0.7)
+            .transition()
+            .duration(1000 + Math.random() * 1000)
+            .attr("cy", -50)
+            .attr("opacity", 0)
+            .remove();
+    }
+
+    // Update knob
+    const knobRotation = (step / 4) * 180;
+    const knobMarker = d3.select(".knob-marker");
+    if (!knobMarker.empty()) {
+        knobMarker.style("transform", `translateX(-50%) rotate(${knobRotation}deg)`);
+    }
+    
+    // Stop previous bubbling
     if (bubbleInterval) {
         clearInterval(bubbleInterval);
         bubbleInterval = null;
     }
-    if (steamInterval) {
-        clearInterval(steamInterval);
-        steamInterval = null;
-    }
     
-    // Clear existing bubbles
-    bubblesGroup.selectAll("*").remove();
+    // Configure bubbles based on step
+    const bubbleConfigs = [
+        { count: 0, interval: 0 },
+        { count: 10, interval: 1000 },
+        { count: 10, interval: 500 },
+        { count: 15, interval: 200 },
+        { count: 20, interval: 50 }
+    ];
 
-    // Create bubbles based on temperature (rising from bottom of visible liquid)
-    const numBubbles = Math.floor(temp * 4);
-    
-    function createBubble() {
-        const bubble = bubblesGroup.append("circle")
-            .attr("cx", (Math.random() - 0.5) * 200)
-            .attr("cy", 0)
-            .attr("r", 2 + Math.random() * 4)
-            .attr("fill", "rgba(255, 255, 255, 0.6)")
-            .attr("opacity", 0.8);
-        
-        bubble.transition()
-            .duration(800 + Math.random() * 600)
-            .ease(d3.easeLinear)
-            .attr("cy", -50)
-            .attr("opacity", 0)
-            .on("end", function() { d3.select(this).remove(); });
-    }
-    
-    // Steam animation function
-    function animateSteam() {
-        steamGroup.selectAll(".steam-particle").each(function(d, i) {
-            const particle = d3.select(this);
-            const delay = Math.random() * 500;
-            const startX = -30 + Math.random() * 60;
-            
-            particle
-                .attr("cx", startX)
-                .attr("cy", -135)
-                .attr("opacity", 0)
-                .transition()
-                .delay(delay)
-                .duration(1500 + Math.random() * 1000)
-                .ease(d3.easeOut)
-                .attr("cy", -200 - Math.random() * 50)
-                .attr("cx", startX + (Math.random() - 0.5) * 40)
-                .attr("opacity", 0.4 * intensity)
-                .attr("rx", 8 + Math.random() * 8)
-                .attr("ry", 6 + Math.random() * 6)
-                .transition()
-                .duration(500)
-                .attr("opacity", 0);
-        });
-    }
-    
-    // Set up continuous animations based on temperature step
-    if (step >= 1) {
-        const bubbleRate = [0, 800, 400, 200, 80][step];
-        const bubblesPerBurst = [0, 2, 4, 8, 15][step];
-        
+    const config = bubbleConfigs[step];
+    if (config.count > 0) {
         bubbleInterval = setInterval(() => {
-            for (let i = 0; i < bubblesPerBurst; i++) {
+            for (let i = 0; i < config.count; i++) {
                 createBubble();
             }
-        }, bubbleRate);
+        }, config.interval);
     }
-    
-    // Steam only appears at higher temperatures
-    if (step >= 2) {
-        const steamRate = [0, 0, 2000, 1200, 600][step];
-        animateSteam();
-        steamInterval = setInterval(animateSteam, steamRate);
-    }
-    
-    // Lid shake animation at highest temperature
-    if (step === 4) {
-        function shakeLid() {
-            lidGroup
-                .transition()
-                .duration(50)
-                .attr("transform", `translate(${(Math.random() - 0.5) * 3}, ${(Math.random() - 0.5) * 2})`)
-                .transition()
-                .duration(50)
-                .attr("transform", "translate(0, 0)");
-        }
-        lidShakeInterval = setInterval(shakeLid, 150);
-    } else if (lidShakeInterval) {
-        clearInterval(lidShakeInterval);
-        lidShakeInterval = null;
-        lidGroup.attr("transform", "translate(0, 0)");
-    }
-
-    // Update knob indicator
-    const knobRotation = (step / 4) * 180;
-    d3.select(".knob-marker")
-        .style("transform", `translateX(-50%) rotate(${knobRotation}deg)`);
 }
 
 // Scrollama setup
@@ -1162,6 +1336,15 @@ for (let i = 0; i < 20; i++) {
 
 // Resize handler
 window.addEventListener('resize', () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    svg.attr("width", width).attr("height", height);
+    
+    // Update minimap position
+    minimapCollapsedX = width - 180;
+    minimapCollapsedY = height - 160;
+    positionMinimap(minimapCollapsedX, minimapCollapsedY, 0);
+    
     scroller.resize();
 });
 
@@ -1180,10 +1363,66 @@ function createBubble() {
 }
 
 // ==============================================
-// TEMPERATURE PREDICTION FEATURE
+// Add CSS for charts
+// ==============================================
+function addChartStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .temperature-chart-container {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar-thumb {
+            background: rgba(255,150,100,0.5);
+            border-radius: 4px;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,150,100,0.7);
+        }
+        
+        .grid line {
+            stroke: rgba(255,255,255,0.1);
+            stroke-width: 1;
+        }
+        
+        .grid path {
+            stroke-width: 0;
+        }
+        
+        .temperature-line {
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        
+        .temperature-line.projection {
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        
+        .chart-icon {
+            pointer-events: none;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Initialize chart styles
+addChartStyles();
+
+// ==============================================
+// TEMPERATURE PREDICTION FEATURE (unchanged)
 // ==============================================
 
-// Wait for DOM to load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - setting up prediction feature');
     
