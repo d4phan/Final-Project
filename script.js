@@ -57,7 +57,7 @@ const projections = [
     { year: 2024, tempIncrease: 0, color: "#4a90e2" },
     { year: 2040, tempIncrease: 0.7, color: "#7fb3d5" },
     { year: 2060, tempIncrease: 1.8, color: "#f39c12" },
-    { year: 2040, tempIncrease: 3.5, color: "#e67e22" },
+    { year: 2080, tempIncrease: 3.1, color: "#e67e22" },
     { year: 2100, tempIncrease: 4.5, color: "#e74c3c" }
 ];
 
