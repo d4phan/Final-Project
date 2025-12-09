@@ -704,6 +704,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const ACTUAL_PROJECTION = 4.5;
     
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Updates the feedback text based on the given temperature value.
+ * @param {number} value The temperature value from the slider.
+/*******  1f72a461-4a8c-4afa-925e-70777d20ffda  *******/
     function updateSliderFeedback(value) {
         if (!feedbackText) return;
         if (value < 1.6) feedbackText.textContent = "Optimistic - below Paris Agreement targets";
@@ -792,4 +797,4 @@ document.addEventListener('DOMContentLoaded', function() {
 // Chart styles
 const chartStyle = document.createElement('style');
 chartStyle.textContent = `.grid line { stroke: rgba(255,255,255,0.1); } .grid path { stroke-width: 0; }`;
-document.head.appendChild(chartStyle);
+document.head.appendChild(chartStyle);  
