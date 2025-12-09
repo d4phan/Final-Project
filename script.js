@@ -121,7 +121,7 @@ expandedMapGroup.append("text")
     .attr("fill", "#ffa500")
     .attr("font-size", "26px")
     .attr("font-family", "'Playfair Display', serif")
-    .text("Coastal Regions at Risk");
+    .text("Coastal Regions at Risk in the U.S.A");
 
 // Close button
 const closeButton = expandedMapGroup.append("g")
