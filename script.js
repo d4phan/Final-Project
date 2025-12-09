@@ -626,6 +626,7 @@ const tempLabel = potGroup.append("text")
     .attr("font-weight", "bold");
 
 // Toggle map expansion
+// Toggle map expansion
 function toggleMapExpansion() {
     isMapExpanded = !isMapExpanded;
     
@@ -644,6 +645,10 @@ function toggleMapExpansion() {
             .duration(400)
             .style("opacity", 0)
             .style("pointer-events", "none");
+        
+        // Reset position to correct location before showing
+        expandedMapGroup
+            .attr("transform", `translate(${width * 0.65}, ${height / 2}) scale(0.75)`);
         
         expandedMapGroup.transition()
             .duration(600)
@@ -671,11 +676,9 @@ function toggleMapExpansion() {
             .style("pointer-events", "all");
 
         expandedMapGroup.transition()
-    .duration(600)
-    .style("opacity", 0)
-    .style("pointer-events", "none")
-    .attr("transform", `translate(${(3 * width) / 4}, ${height}) scale(0.8)`);
-
+            .duration(600)
+            .style("opacity", 0)
+            .style("pointer-events", "none");
     }
 }
 
