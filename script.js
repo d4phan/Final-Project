@@ -55,10 +55,10 @@ const coastalRegions = [
 
 const projections = [
     { year: 2024, tempIncrease: 0, color: "#4a90e2" },
-    { year: 2030, tempIncrease: 1.2, color: "#7fb3d5" },
-    { year: 2035, tempIncrease: 2.1, color: "#f39c12" },
+    { year: 2040, tempIncrease: 0.7, color: "#7fb3d5" },
+    { year: 2060, tempIncrease: 1.8, color: "#f39c12" },
     { year: 2040, tempIncrease: 3.5, color: "#e67e22" },
-    { year: 2050, tempIncrease: 4.8, color: "#e74c3c" }
+    { year: 2100, tempIncrease: 4.5, color: "#e74c3c" }
 ];
 
 const svg = d3.select("#visualization");
@@ -861,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsSection: !!resultsSection
     });
     
-    const ACTUAL_PROJECTION = 4.8; // Actual projected increase by 2050
+    const ACTUAL_PROJECTION = 4.5; // Actual projected increase by 2100
     
     // Function to update slider feedback text
     function updateSliderFeedback(value) {
@@ -1053,7 +1053,7 @@ document.addEventListener('DOMContentLoaded', function() {
         shareBtn.addEventListener('click', function() {
             if (slider) {
                 const userTemp = parseFloat(slider.value).toFixed(1);
-                const shareText = `I predicted a ${userTemp}°C temperature rise in coastal zones by 2050. The actual projection is 4.8°C. Test your climate intuition!`;
+                const shareText = `I predicted a ${userTemp}°C temperature rise in coastal zones by 2100. The actual projection is 4.5°C. Test your climate intuition!`;
                 
                 if (navigator.share) {
                     navigator.share({
