@@ -11,6 +11,8 @@ for (let i = 0; i < 15; i++) {
     header.appendChild(ember);
 }
 
+
+
 // Coastal regions data
 const coastalRegions = [
     { 
@@ -42,7 +44,7 @@ const coastalRegions = [
         markerPos: { x: -270, y: 40 }
     },
     {
-        name: "Hawaii Coast",
+        name: "Hawaiian Coast",
         baseTemp: 25,
         info: "Hawaii's coastal regions are vulnerable to sea level rise and coral bleaching due to rising ocean temperatures, impacting tourism and local ecosystems.",
         states: ["Hawaii"],
@@ -62,7 +64,14 @@ const projections = [
 const svg = d3.select("#visualization");
 const width = window.innerWidth;
 const height = window.innerHeight;
-svg.attr("width", width).attr("height", height);
+svg.attr("width", width * 1.5).attr("height", height);
+let minimapCollapsedX = width - 180;
+let minimapCollapsedY = height - 160;
+
+let minimapExpandedX = width / 2 + 250;
+let minimapExpandedY = height / 2 - 60;
+
+
 
 // State management
 let isMapExpanded = false;
@@ -78,8 +87,15 @@ const potGroup = mainGroup.append("g")
 // Create minimap group
 const minimapGroup = svg.append("g")
     .attr("class", "minimap-group")
-    .attr("transform", `translate(${width - 180}, ${height - 160})`)
     .style("cursor", "pointer");
+
+function positionMinimap(x, y, duration = 0) {
+    minimapGroup.transition()
+        .duration(duration)
+        .attr("transform", `translate(${x}, ${y})`);
+}
+positionMinimap(minimapCollapsedX, minimapCollapsedY);
+
 
 // Minimap background
 minimapGroup.append("rect")
@@ -112,7 +128,7 @@ const rightShift = 120;
 // Create expanded map group (initially hidden) - SHIFTED RIGHT
 const expandedMapGroup = svg.append("g")
     .attr("class", "expanded-map-group")
-    .attr("transform", `translate(${width/2 + rightShift}, ${height/2})`)
+    .attr("transform", `translate(${width * 0.65}, ${height / 2}) scale(0.75)`)
     .style("opacity", 0)
     .style("pointer-events", "none");
 
@@ -198,6 +214,7 @@ const legendItems = [
     { color: "rgba(255, 107, 53, 0.7)", label: "Pacific Coast" },
     { color: "rgba(100, 200, 255, 0.7)", label: "Atlantic Coast" },
     { color: "rgba(255, 200, 50, 0.7)", label: "Gulf Coast" },
+    {color: "rgba(78, 175, 88, 0.82)", label: "Hawaiian Coast" },
     { color: "rgba(100, 150, 200, 0.4)", label: "Other States" }
 ];
 
@@ -579,8 +596,8 @@ coastalRegions.forEach((region, i) => {
 
     // Arrow to pot
     regionsGroup.append("line")
-        .attr("x1", x)
-        .attr("y1", y)
+        .attr("x1", region.name === "Hawaiian Coast" ? x + 100 : x)
+        .attr("y1", region.name === "Hawaiian Coast" ? y + 100 : y)
         .attr("x2", width/2 + Math.cos(angle) * 160)
         .attr("y2", height/2 + Math.sin(angle) * 80)
         .attr("stroke", "#666")
@@ -589,13 +606,14 @@ coastalRegions.forEach((region, i) => {
         .attr("opacity", 0.5);
 
     // Region label
-    regionsGroup.append("text")
-        .attr("x", x)
-        .attr("y", y)
-        .attr("text-anchor", "middle")
-        .attr("fill", "#fff")
-        .attr("font-size", "14px")
-        .text(region.name);
+regionsGroup.append("text")
+    .attr("x", region.name === "Hawaiian Coast" ? x + 100 : x)
+    .attr("y", region.name === "Hawaiian Coast" ? y + 100 : y)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#fff")
+    .attr("font-size", "14px")
+    .text(region.name);
+
 });
 
 // Temperature label
@@ -608,14 +626,16 @@ const tempLabel = potGroup.append("text")
     .attr("font-weight", "bold");
 
 // Toggle map expansion
+// Toggle map expansion
 function toggleMapExpansion() {
     isMapExpanded = !isMapExpanded;
     
     if (isMapExpanded) {
         // Shrink pot and show expanded map
         potGroup.transition()
-            .duration(600)
-            .attr("transform", `translate(${width - 150}, ${height - 130}) scale(0.15)`);
+        .duration(600)
+        .attr("transform", `translate(${width / 4}, ${height / 2}) scale(1)`);
+
         
         regionsGroup.transition()
             .duration(400)
@@ -625,6 +645,10 @@ function toggleMapExpansion() {
             .duration(400)
             .style("opacity", 0)
             .style("pointer-events", "none");
+        
+        // Reset position to correct location before showing
+        expandedMapGroup
+            .attr("transform", `translate(${width * 0.65}, ${height / 2}) scale(0.75)`);
         
         expandedMapGroup.transition()
             .duration(600)
@@ -650,9 +674,9 @@ function toggleMapExpansion() {
             .delay(400)
             .style("opacity", 1)
             .style("pointer-events", "all");
-        
+
         expandedMapGroup.transition()
-            .duration(400)
+            .duration(600)
             .style("opacity", 0)
             .style("pointer-events", "none");
     }
@@ -786,8 +810,13 @@ for (let i = 0; i < 20; i++) {
 
 // Resize handler
 window.addEventListener('resize', () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    svg.attr("width", width).attr("height", height);
+    positionMinimap();
     scroller.resize();
 });
+
 
 function createBubble() {
     bubblesGroup.append("circle")

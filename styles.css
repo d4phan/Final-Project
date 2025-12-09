@@ -257,6 +257,14 @@ h1 {
     height: 100%;
 }
 
+.main-group {
+  flex: 1;
+}
+
+.expanded-map-group {
+  flex: 1;
+}
+
 .step {
     height: 100vh;
     display: flex;
