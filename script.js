@@ -1426,3 +1426,319 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 500);
 });
+('resize', () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    svg.attr("width", width).attr("height", height);
+    
+    // Update minimap position
+    minimapCollapsedX = width - 180;
+    minimapCollapsedY = height - 160;
+    positionMinimap(minimapCollapsedX, minimapCollapsedY, 0);
+    
+    scroller.resize();
+});
+
+// ==============================================
+// Add CSS for charts
+// ==============================================
+function addChartStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .temperature-chart-container {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar-thumb {
+            background: rgba(255,150,100,0.5);
+            border-radius: 4px;
+        }
+        
+        .temperature-chart-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,150,100,0.7);
+        }
+        
+        .grid line {
+            stroke: rgba(255,255,255,0.1);
+            stroke-width: 1;
+        }
+        
+        .grid path {
+            stroke-width: 0;
+        }
+        
+        .temperature-line {
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        
+        .temperature-line.projection {
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        
+        .chart-icon {
+            pointer-events: none;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Initialize chart styles
+addChartStyles();
+
+// ==============================================
+// TEMPERATURE PREDICTION FEATURE
+// ==============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - setting up prediction feature');
+    
+    // Get all elements
+    const slider = document.getElementById('temperature-slider');
+    const predictionValue = document.getElementById('prediction-value');
+    const submitBtn = document.getElementById('submit-prediction');
+    const tryAgainBtn = document.getElementById('try-again');
+    const scrollToVizBtn = document.getElementById('scroll-to-visualization');
+    const resultsSection = document.getElementById('prediction-results');
+    const userPredictionDisplay = document.getElementById('user-prediction');
+    const actualProjectionDisplay = document.getElementById('actual-projection');
+    const temperatureDifference = document.getElementById('temperature-difference');
+    const resultMessage = document.getElementById('result-message');
+    const accuracyFeedback = document.getElementById('accuracy-feedback');
+    const feedbackText = document.getElementById('slider-feedback-text');
+    
+    console.log('Elements found:', {
+        slider: !!slider,
+        predictionValue: !!predictionValue,
+        submitBtn: !!submitBtn,
+        resultsSection: !!resultsSection
+    });
+    
+    const ACTUAL_PROJECTION = 4.5; // Actual projected increase by 2100
+    
+    // Function to update slider feedback text
+    function updateSliderFeedback(value) {
+        if (!feedbackText) return;
+        
+        if (value < 1.6) {
+            feedbackText.textContent = "Optimistic - below Paris Agreement targets";
+        } else if (value < 2.6) {
+            feedbackText.textContent = "Paris Agreement goal range";
+        } else if (value < 3.6) {
+            feedbackText.textContent = "Current policy trajectory";
+        } else if (value < 4.6) {
+            feedbackText.textContent = "Significant coastal impacts expected";
+        } else {
+            feedbackText.textContent = "Severe coastal disruption";
+        }
+    }
+    
+    // Update prediction display when slider moves
+    if (slider && predictionValue) {
+        slider.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            console.log('Slider moved:', value);
+            predictionValue.textContent = `+${value.toFixed(1)}°C`;
+            updateSliderFeedback(value);
+        });
+        
+        // Initialize display
+        const initialValue = parseFloat(slider.value);
+        predictionValue.textContent = `+${initialValue.toFixed(1)}°C`;
+        updateSliderFeedback(initialValue);
+    }
+    
+    // Function to update impact bars
+    function updateImpactBars(userTemp, actualTemp) {
+        const userBar = document.querySelector('.user-prediction .impact-bar');
+        const actualBar = document.querySelector('.actual-projection .impact-bar');
+        
+        if (userBar) {
+            const userPercent = Math.min(100, (userTemp / 7) * 100);
+            userBar.style.width = `${userPercent}%`;
+        }
+        
+        if (actualBar) {
+            const actualPercent = Math.min(100, (actualTemp / 7) * 100);
+            actualBar.style.width = `${actualPercent}%`;
+        }
+    }
+    
+    // Function to show accuracy feedback - NO SCROLLING
+    function showAccuracyFeedback(userPrediction) {
+        console.log('Showing accuracy feedback for:', userPrediction);
+        const actual = ACTUAL_PROJECTION;
+        const difference = actual - userPrediction;
+        const absDifference = Math.abs(difference);
+        
+        // Update all display elements
+        if (userPredictionDisplay) {
+            userPredictionDisplay.textContent = userPrediction.toFixed(1);
+        }
+        
+        if (actualProjectionDisplay) {
+            actualProjectionDisplay.textContent = actual.toFixed(1);
+        }
+        
+        if (temperatureDifference) {
+            temperatureDifference.textContent = `${difference >= 0 ? '+' : ''}${difference.toFixed(1)}°C`;
+        }
+        
+        // Update impact bars
+        updateImpactBars(userPrediction, actual);
+        
+        // Determine accuracy level and set messages
+        let message, details;
+        
+        if (absDifference <= 0.3) {
+            message = "🎯 Excellent! Very accurate prediction!";
+            details = "Your estimate is remarkably close to scientific projections.";
+        } 
+        else if (absDifference <= 0.8) {
+            message = "📊 Good estimate!";
+            details = `Your prediction was off by ${absDifference.toFixed(1)}°C. That's a solid understanding of climate trends.`;
+        }
+        else if (absDifference <= 1.5) {
+            message = "📈 In the right range";
+            details = `Your estimate is ${absDifference.toFixed(1)}°C from the projection. The reality is more severe than many expect.`;
+        }
+        else if (absDifference <= 2.5) {
+            message = "🔽 Significant difference";
+            details = `Projections show ${difference > 0 ? "higher" : "lower"} warming than you predicted. Climate models indicate ${actual.toFixed(1)}°C increase.`;
+        }
+        else {
+            message = "⚠️ Large discrepancy";
+            details = `There's a ${absDifference.toFixed(1)}°C difference. Coastal zones are projected to warm more dramatically.`;
+        }
+        
+        // Additional context based on over/underestimation
+        if (userPrediction < actual - 0.5) {
+            details += " Many people underestimate how much coastal areas are warming.";
+        } else if (userPrediction > actual + 0.5) {
+            details += " While your estimate is high, some worst-case scenarios do reach these levels.";
+        }
+        
+        // Set messages
+        if (resultMessage) {
+            resultMessage.textContent = message;
+        }
+        
+        if (accuracyFeedback) {
+            accuracyFeedback.textContent = details;
+        }
+        
+        // Show results section WITHOUT scrolling - just display it in place
+        if (resultsSection) {
+            console.log('Showing results section');
+            resultsSection.style.display = 'block';
+            // Add a smooth fade-in effect instead of scrolling
+            resultsSection.style.opacity = '0';
+            resultsSection.style.transition = 'opacity 0.5s ease-in-out';
+            setTimeout(() => {
+                resultsSection.style.opacity = '1';
+            }, 50);
+        }
+    }
+    
+    // Handle submit button
+    if (submitBtn) {
+        console.log('Submit button found, adding event listener');
+        submitBtn.addEventListener('click', function() {
+            console.log('Submit button clicked');
+            if (slider) {
+                const userPrediction = parseFloat(slider.value);
+                console.log('User prediction value:', userPrediction);
+                showAccuracyFeedback(userPrediction);
+            }
+        });
+    } else {
+        console.error('Submit button NOT FOUND! Check your HTML for id="submit-prediction"');
+    }
+    
+    // Handle try again button
+    if (tryAgainBtn) {
+        tryAgainBtn.addEventListener('click', function() {
+            console.log('Try again clicked');
+            // Reset slider
+            if (slider) {
+                slider.value = 2.5;
+            }
+            
+            // Reset prediction display
+            if (predictionValue) {
+                predictionValue.textContent = '+2.5°C';
+            }
+            
+            // Reset feedback text
+            if (feedbackText) {
+                feedbackText.textContent = "Moderate increase projected by many climate models";
+            }
+            
+            // Hide results section with fade out
+            if (resultsSection) {
+                resultsSection.style.opacity = '0';
+                setTimeout(() => {
+                    resultsSection.style.display = 'none';
+                }, 500);
+            }
+            
+            // Focus back on slider
+            if (slider) {
+                slider.focus();
+            }
+        });
+    }
+    
+    // Handle "Continue to Visualization" button
+    if (scrollToVizBtn) {
+        scrollToVizBtn.addEventListener('click', function() {
+            console.log('Continue to visualization clicked');
+            const scrollySection = document.getElementById('scrolly-section');
+            if (scrollySection) {
+                scrollySection.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    }
+    
+    // Handle share button (optional basic functionality)
+    const shareBtn = document.getElementById('share-results');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', function() {
+            if (slider) {
+                const userTemp = parseFloat(slider.value).toFixed(1);
+                const shareText = `I predicted a ${userTemp}°C temperature rise in coastal zones by 2100. The actual projection is 4.5°C. Test your climate intuition!`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'My Climate Prediction',
+                        text: shareText,
+                        url: window.location.href
+                    });
+                } else {
+                    // Fallback: Copy to clipboard
+                    navigator.clipboard.writeText(shareText)
+                        .then(() => alert('Results copied to clipboard!'))
+                        .catch(() => alert('Could not share results.'));
+                }
+            }
+        });
+    }
+    
+    // Initialize impact bars
+    setTimeout(() => {
+        if (slider) {
+            const initialValue = parseFloat(slider.value);
+            updateImpactBars(initialValue, ACTUAL_PROJECTION);
+        }
+    }, 500);
+});
