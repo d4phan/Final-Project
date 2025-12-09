@@ -17,8 +17,8 @@ const coastalRegions = [
         name: "Pacific Coast", 
         baseTemp: 18,
         info: "The Pacific Coast stretches from Alaska to California, experiencing significant warming trends. Rising ocean temperatures are affecting marine ecosystems and coastal communities.",
-        states: ["California", "Oregon", "Washington"],
-        markerPos: { x: -280, y: -20 }
+        states: ["California", "Oregon", "Washington", "Alaska"],
+        markerPos: { x: -300, y: -140 }
     },
     { 
         name: "Atlantic Coast", 
@@ -40,7 +40,15 @@ const coastalRegions = [
         info: "Mediterranean climate zones in California are shifting toward more extreme dry heat conditions, increasing wildfire risk and water scarcity.",
         states: ["California"],
         markerPos: { x: -270, y: 40 }
+    },
+    {
+        name: "Hawaii Coast",
+        baseTemp: 25,
+        info: "Hawaii's coastal regions are vulnerable to sea level rise and coral bleaching due to rising ocean temperatures, impacting tourism and local ecosystems.",
+        states: ["Hawaii"],
+        markerPos: { x: -150, y: 170 }
     }
+
 ];
 
 const projections = [
@@ -160,7 +168,7 @@ closeButton.append("text")
     .attr("fill", "#ff6b6b")
     .attr("font-size", "20px")
     .attr("font-weight", "bold")
-    .text("×");
+    .text("x");
 
 // Legend box - TO THE RIGHT of the map
 const legendBox = expandedMapGroup.append("g")
@@ -337,9 +345,10 @@ async function loadUSMap() {
         const minimapPath = d3.geoPath().projection(minimapProjection);
         
         // Define coastal states for highlighting
-        const pacificStates = ["California", "Oregon", "Washington"];
+        const pacificStates = ["California", "Oregon", "Washington", "Alaska"];
         const atlanticStates = ["Maine", "New Hampshire", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Delaware", "Maryland", "Virginia", "North Carolina", "South Carolina", "Georgia", "Florida"];
         const gulfStates = ["Texas", "Louisiana", "Mississippi", "Alabama"];
+        const hawaiiCoast = ["Hawaii"];
         
         // State names lookup (FIPS codes)
         const stateNames = {
@@ -370,6 +379,7 @@ async function loadUSMap() {
                 if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
                 if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
                 if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
+                if (hawaiiCoast.includes(stateName)) return "rgba(78, 175, 88, 0.82)";
                 return "rgba(100, 150, 200, 0.25)";
             })
             .attr("stroke", "rgba(150, 200, 255, 0.4)")
@@ -405,6 +415,7 @@ async function loadUSMap() {
                 if (pacificStates.includes(stateName)) return "rgba(255, 107, 53, 0.5)";
                 if (atlanticStates.includes(stateName)) return "rgba(100, 200, 255, 0.5)";
                 if (gulfStates.includes(stateName)) return "rgba(255, 200, 50, 0.5)";
+                if (hawaiiCoast.includes(stateName)) return "rgba(78, 175, 88, 0.82)";
                 return "rgba(100, 150, 200, 0.3)";
             })
             .attr("stroke", "rgba(150, 200, 255, 0.4)")
